@@ -46,7 +46,7 @@
             : year === 2025
             ? DAYS_IN_2023_FROM_1ST_OF_APRIL + DAYS_IN_LEAP_YEAR + dayOfYear
             : dayOfYear;
-        }
+        };
 
         const dayOfYearToMonth = (datum) => {
           const START_OF_2025 = 641;
@@ -78,7 +78,7 @@
           }
 
           throw new Error("Unable to determine the month.");
-        }
+        };
 
         const generateSpacedDates = (monthNumber, datesToReturnInTheMonth) => {
           const totalOfDaysAtTheMonth = months[monthNumber].days;
@@ -100,7 +100,7 @@
           }
 
           return dates;
-        }
+        };
 
         const distributeDatesAtTheMonth = (objects) => {
           const dateMap = new Map();
@@ -131,7 +131,7 @@
             result = [...result, ...dates];
           }
           return result;
-        }
+        };
 
         const TOTAL_OF_DAYS_FROM_1ST_OF_APRIL_OF_2023_TO_17TH_OF_APRIL_OF_2025 = 748;
 
@@ -166,7 +166,7 @@
           ];
           const month = monthNames[date.getUTCMonth()];
           return `${dayWithSuffix} ${month} ${date.getUTCFullYear()}`;
-        }
+        };
 
         const values = distributeDatesAtTheMonth(
           (
@@ -239,7 +239,7 @@
             {
               name: "labelsOnHover",
               description: "milestone: show labels on hover only",
-              value: false,
+              value: true,
               bind: { name: "hover labels", input: "checkbox" },
             },
             {
@@ -420,7 +420,7 @@
                 {
                   events: { type: "mouseover" },
                   update:
-                    "!isValid(hoverFocus) || showDetails ? '' : {title: hoverFocus['domain'] + 'M years ago', 'Event:': hoverFocus['name'], 'Lost:': format(12, '.0%') + ' species lost'}",
+                    "!isValid(hoverFocus) || showDetails ? '' : {title: hoverFocus['domain'] + 'M years ago', 'Title:': hoverFocus['DATA SET TITLE']}",
                 },
                 { events: { type: "mouseout" }, update: "''" },
               ],
