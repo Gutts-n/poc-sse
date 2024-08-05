@@ -11,7 +11,7 @@
   <body>
     <div id="vis"></div>
     <script type="text/javascript">
-      const a = async () => {
+      (async () => {
         const DAYS_IN_REGULAR_YEAR = 365;
         const DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR = 90;
         const DAYS_IN_LEAP_YEAR = 366;
@@ -32,7 +32,7 @@
           { name: "December", days: 31 },
         ];
 
-        function getDayOfYear(dateString) {
+        const getDayOfYear = (dateString) => {
           const [day, month, year] = dateString.split("/").map(Number);
           const date = new Date(year, month - 1, day);
 
@@ -48,7 +48,7 @@
             : dayOfYear;
         }
 
-        function dayOfYearToMonth(datum) {
+        const dayOfYearToMonth = (datum) => {
           const START_OF_2025 = 641;
           const END_OF_2023 = 275;
           let dayOfTheYear;
@@ -80,7 +80,7 @@
           throw new Error("Unable to determine the month.");
         }
 
-        function generateSpacedDates(monthNumber, datesToReturnInTheMonth) {
+        const generateSpacedDates = (monthNumber, datesToReturnInTheMonth) => {
           const totalOfDaysAtTheMonth = months[monthNumber].days;
           const interval = Math.floor(
             totalOfDaysAtTheMonth / datesToReturnInTheMonth
@@ -102,7 +102,7 @@
           return dates;
         }
 
-        function distributeDatesAtTheMonth(objects) {
+        const distributeDatesAtTheMonth = (objects) => {
           const dateMap = new Map();
 
           objects.forEach((element) => {
@@ -135,7 +135,7 @@
 
         const TOTAL_OF_DAYS_FROM_1ST_OF_APRIL_OF_2023_TO_17TH_OF_APRIL_OF_2025 = 748;
 
-        function formatTimestamp(timestamp) {
+        const formatTimestamp = (timestamp) => {
           const date = new Date(timestamp);
           const day = date.getUTCDate();
           let dayWithSuffix;
@@ -1015,8 +1015,7 @@
         vegaEmbed("#vis", configuration, {
           expressionFunctions: { dayOfYearToMonth },
         });
-      };
-      a();
+      })();
     </script>
   </body>
 </html>
