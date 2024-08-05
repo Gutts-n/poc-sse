@@ -12,6 +12,7 @@
     <div id="vis"></div>
     <script type="text/javascript">
       const DAYS_IN_REGULAR_YEAR = 365;
+      const DAYS_FROM_JAN_UNTIL_APR = 90;
       const DAYS_IN_LEAP_YEAR = 366;
       const months = [
         { name: "January", days: 31 },
@@ -38,20 +39,20 @@
           Math.ceil((date - startOfYear) / millisecondsPerDay) + 1;
 
         return year === 2024
-          ? dayOfYear + DAYS_IN_REGULAR_YEAR
+          ? dayOfYear + DAYS_IN_REGULAR_YEAR - DAYS_FROM_JAN_UNTIL_APR
           : year === 2025
-          ? DAYS_IN_REGULAR_YEAR + DAYS_IN_LEAP_YEAR + dayOfYear
+          ? DAYS_IN_REGULAR_YEAR + DAYS_IN_LEAP_YEAR + dayOfYear - DAYS_FROM_JAN_UNTIL_APR
           : dayOfYear;
       }
 
       function dayOfYearToMonth(datum) {
-        const DAYS_FROM_JAN_UNTIL_APR = 90;
         const START_OF_2025 = 641;
         const END_OF_2023 = 275;
         let dayOfTheYear;
 
         if (datum.domain > END_OF_2023 && datum.domain < START_OF_2025) {
-          dayOfTheYear = datum.domain - DAYS_IN_REGULAR_YEAR - DAYS_FROM_JAN_UNTIL_APR;
+          dayOfTheYear =
+            datum.domain - DAYS_IN_REGULAR_YEAR - DAYS_FROM_JAN_UNTIL_APR;
         } else if (datum.domain > START_OF_2025) {
           dayOfTheYear =
             datum.domain - DAYS_IN_REGULAR_YEAR - DAYS_IN_LEAP_YEAR;
@@ -1027,6 +1028,8 @@
             interactive: true,
             encode: {
               update: {
+                tooltip: { signal: "milestoneTooltip" },
+                cursor: { value: "pointer" },
                 x: { field: "x" },
                 y: { field: "y" },
                 size: {
