@@ -12,7 +12,7 @@
     <div id="vis"></div>
     <script type="text/javascript">
       const DAYS_IN_REGULAR_YEAR = 365;
-      const DAYS_FROM_JAN_UNTIL_APR = 90;
+      const DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR = 90;
       const DAYS_IN_LEAP_YEAR = 366;
       const months = [
         { name: "January", days: 31 },
@@ -39,9 +39,9 @@
           Math.ceil((date - startOfYear) / millisecondsPerDay) + 1;
 
         return year === 2024
-          ? dayOfYear + DAYS_IN_REGULAR_YEAR - DAYS_FROM_JAN_UNTIL_APR
+          ? dayOfYear + DAYS_IN_REGULAR_YEAR - DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR
           : year === 2025
-          ? DAYS_IN_REGULAR_YEAR + DAYS_IN_LEAP_YEAR + dayOfYear - DAYS_FROM_JAN_UNTIL_APR
+          ? DAYS_IN_REGULAR_YEAR + DAYS_IN_LEAP_YEAR + dayOfYear - DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR
           : dayOfYear;
       }
 
@@ -52,12 +52,12 @@
 
         if (datum.domain > END_OF_2023 && datum.domain < START_OF_2025) {
           dayOfTheYear =
-            datum.domain - DAYS_IN_REGULAR_YEAR - DAYS_FROM_JAN_UNTIL_APR;
+            datum.domain - DAYS_IN_REGULAR_YEAR + DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
         } else if (datum.domain > START_OF_2025) {
           dayOfTheYear =
-            datum.domain - DAYS_IN_REGULAR_YEAR - DAYS_IN_LEAP_YEAR;
+            datum.domain - DAYS_IN_REGULAR_YEAR - DAYS_IN_LEAP_YEAR - DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
         } else {
-          dayOfTheYear = datum.domain + DAYS_FROM_JAN_UNTIL_APR;
+          dayOfTheYear = datum.domain + DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
         }
 
         let cumulativeDays = 0;
