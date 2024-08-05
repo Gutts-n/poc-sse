@@ -11,1348 +11,1012 @@
   <body>
     <div id="vis"></div>
     <script type="text/javascript">
-      const DAYS_IN_REGULAR_YEAR = 365;
-      const DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR = 90;
-      const DAYS_IN_LEAP_YEAR = 366;
-      const DAYS_IN_2023_FROM_1ST_OF_APRIL = DAYS_IN_REGULAR_YEAR - DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
-      const months = [
-        { name: "January", days: 31 },
-        { name: "February", days: 29 },
-        { name: "March", days: 31 },
-        { name: "April", days: 30 },
-        { name: "May", days: 31 },
-        { name: "June", days: 30 },
-        { name: "July", days: 31 },
-        { name: "August", days: 31 },
-        { name: "September", days: 30 },
-        { name: "October", days: 31 },
-        { name: "November", days: 30 },
-        { name: "December", days: 31 },
-      ];
+      const a = async () => {
+        const DAYS_IN_REGULAR_YEAR = 365;
+        const DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR = 90;
+        const DAYS_IN_LEAP_YEAR = 366;
+        const DAYS_IN_2023_FROM_1ST_OF_APRIL =
+          DAYS_IN_REGULAR_YEAR - DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
+        const months = [
+          { name: "January", days: 31 },
+          { name: "February", days: 29 },
+          { name: "March", days: 31 },
+          { name: "April", days: 30 },
+          { name: "May", days: 31 },
+          { name: "June", days: 30 },
+          { name: "July", days: 31 },
+          { name: "August", days: 31 },
+          { name: "September", days: 30 },
+          { name: "October", days: 31 },
+          { name: "November", days: 30 },
+          { name: "December", days: 31 },
+        ];
 
-      function getDayOfYear(dateString) {
-        const [day, month, year] = dateString.split("/").map(Number);
-        const date = new Date(year, month - 1, day);
+        function getDayOfYear(dateString) {
+          const [day, month, year] = dateString.split("/").map(Number);
+          const date = new Date(year, month - 1, day);
 
-        const startOfYear = new Date(year, 0, 1);
-        const millisecondsPerDay = 86400000;
-        const dayOfYear =
-          Math.ceil((date - startOfYear) / millisecondsPerDay) + 1;
+          const startOfYear = new Date(year, 0, 1);
+          const millisecondsPerDay = 86400000;
+          const dayOfYear =
+            Math.ceil((date - startOfYear) / millisecondsPerDay) + 1;
 
-        return year === 2024
-          ? dayOfYear + DAYS_IN_2023_FROM_1ST_OF_APRIL
-          : year === 2025
-          ? DAYS_IN_2023_FROM_1ST_OF_APRIL + DAYS_IN_LEAP_YEAR + dayOfYear
-          : dayOfYear;
-      }
-
-      function dayOfYearToMonth(datum) {
-        const START_OF_2025 = 641;
-        const END_OF_2023 = 275;
-        let dayOfTheYear;
-
-        if (datum.domain > END_OF_2023 && datum.domain < START_OF_2025) {
-          dayOfTheYear =
-            datum.domain - DAYS_IN_2023_FROM_1ST_OF_APRIL;
-        } else if (datum.domain > START_OF_2025) {
-          dayOfTheYear =
-            datum.domain - DAYS_IN_LEAP_YEAR - DAYS_IN_2023_FROM_1ST_OF_APRIL;
-        } else {
-          dayOfTheYear = datum.domain + DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
+          return year === 2024
+            ? dayOfYear + DAYS_IN_2023_FROM_1ST_OF_APRIL
+            : year === 2025
+            ? DAYS_IN_2023_FROM_1ST_OF_APRIL + DAYS_IN_LEAP_YEAR + dayOfYear
+            : dayOfYear;
         }
 
-        let cumulativeDays = 0;
+        function dayOfYearToMonth(datum) {
+          const START_OF_2025 = 641;
+          const END_OF_2023 = 275;
+          let dayOfTheYear;
 
-        for (const month of months) {
-          cumulativeDays +=
-            month.days -
-            (month === months[1] &&
-            (datum.domain < END_OF_2023 || datum.domain > START_OF_2025)
-              ? 1
-              : 0);
-          if (dayOfTheYear <= cumulativeDays) {
-            return month.name;
-          }
-        }
-
-        throw new Error("Unable to determine the month.");
-      }
-
-      function generateSpacedDates(monthNumber, datesToReturnInTheMonth) {
-        const totalOfDaysAtTheMonth = months[monthNumber].days;
-        const interval = Math.floor(
-          totalOfDaysAtTheMonth / datesToReturnInTheMonth
-        );
-
-        const dates = [];
-        for (let i = 1; i < datesToReturnInTheMonth + 1; i++) {
-          const day = Math.min(
-            i == 1 ? 1 : i * interval,
-            totalOfDaysAtTheMonth
-          );
-          dates.push(
-            `${String(day).padStart(2, "0")}/${String(monthNumber + 1).padStart(
-              2,
-              "0"
-            )}/${2024}`
-          );
-        }
-
-        return dates;
-      }
-
-      function distributeDatesAtTheMonth(objects) {
-        const dateMap = new Map();
-
-        objects.forEach((element) => {
-          const month =
-            element["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"]
-              .split("/")
-              .map(Number)[1] - 1;
-          const dates = dateMap.get(month);
-          if (!dates || dates.length <= 0) {
-            dateMap.set(month, [element]);
+          if (datum.domain > END_OF_2023 && datum.domain < START_OF_2025) {
+            dayOfTheYear = datum.domain - DAYS_IN_2023_FROM_1ST_OF_APRIL;
+          } else if (datum.domain > START_OF_2025) {
+            dayOfTheYear =
+              datum.domain - DAYS_IN_LEAP_YEAR - DAYS_IN_2023_FROM_1ST_OF_APRIL;
           } else {
-            dates.push(element);
+            dayOfTheYear =
+              datum.domain + DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
           }
-        });
 
-        let result = [];
-        for (const month of Array.from(dateMap.keys())) {
-          const dates = dateMap.get(month);
-          if (dates.length > 1) {
-            days = generateSpacedDates(month, dates.length);
-            dates.forEach(
-              (x, i) => (x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"] = days[i])
+          let cumulativeDays = 0;
+
+          for (const month of months) {
+            cumulativeDays +=
+              month.days -
+              (month === months[1] &&
+              (datum.domain < END_OF_2023 || datum.domain > START_OF_2025)
+                ? 1
+                : 0);
+            if (dayOfTheYear <= cumulativeDays) {
+              return month.name;
+            }
+          }
+
+          throw new Error("Unable to determine the month.");
+        }
+
+        function generateSpacedDates(monthNumber, datesToReturnInTheMonth) {
+          const totalOfDaysAtTheMonth = months[monthNumber].days;
+          const interval = Math.floor(
+            totalOfDaysAtTheMonth / datesToReturnInTheMonth
+          );
+
+          const dates = [];
+          for (let i = 1; i < datesToReturnInTheMonth + 1; i++) {
+            const day = Math.min(
+              i == 1 ? 1 : i * interval,
+              totalOfDaysAtTheMonth
+            );
+            dates.push(
+              `${String(day).padStart(2, "0")}/${String(
+                monthNumber + 1
+              ).padStart(2, "0")}/${2024}`
             );
           }
-          result = [...result, ...dates];
-        }
-        return result;
-      }
 
-      const TOTAL_OF_DAYS_FROM_1ST_OF_APRIL_OF_2023_TO_17TH_OF_APRIL_OF_2025 = 748;
-
-      function formatTimestamp(timestamp) {
-        const date = new Date(timestamp);
-        const day = date.getUTCDate();
-        let dayWithSuffix;
-
-        if (day === 1 || day === 21 || day === 31) {
-          dayWithSuffix = day + "st";
-        } else if (day === 2 || day === 22) {
-          dayWithSuffix = day + "nd";
-        } else if (day === 3 || day === 23) {
-          dayWithSuffix = day + "rd";
-        } else {
-          dayWithSuffix = day + "th";
+          return dates;
         }
 
-        const monthNames = [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ];
-        const month = monthNames[date.getUTCMonth()];
-        return `${dayWithSuffix} ${month} ${date.getUTCFullYear()}`;
-      }
-      const values = distributeDatesAtTheMonth(
-        [
-          {
-            _id: 1,
-            "DATA SET TITLE": "Strategic Investment Plans ",
-            "DESCRIPTION OF DATA SET":
-              "A local energy plan for the network containing evidence for strategic investment.",
-            "USE CASE FOR DATA SET":
-              "Provide a long term view of plans to develop the network. The strategic investment plans will be used as a tool to communicate with Local Authorities and Local stakeholders, where we are likely to see constraints and capacity both in the short-term and the long term.",
-            "TARGET AUDIENCE": "Local Authorities and Councils ",
-            "DATA SET FORMAT": "PDF",
-            "DATA COLLECTION/ CATEGORY": "Investment Plans ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "30/06/2024",
-            "REFRESH RATE": "Annually, once established",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 2,
-            "DATA SET TITLE": "Distribution Networks Options Assessment (DNOA)",
-            "DESCRIPTION OF DATA SET":
-              "A publication which provides transparency to the industry on the decisions SSEN have made on meeting capacity needs, through flexibility or reinforcement in both License areas.",
-            "USE CASE FOR DATA SET":
-              "Transparency on decision making and plans to develop the network in the next 3 years.",
-            "TARGET AUDIENCE":
-              "Regulatory Bodies, Flexibility Providers, Distributed Generation Customers ",
-            "DATA SET FORMAT": "PDF ",
-            "DATA COLLECTION/ CATEGORY": "DNOA",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "30/06/2024",
-            "REFRESH RATE": "Annually, once established",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 3,
-            "DATA SET TITLE": "DNOA methodology",
-            "DESCRIPTION OF DATA SET":
-              "New investment and network planning process.",
-            "USE CASE FOR DATA SET":
-              "Provide transparency to all stakeholders on the methodology used for decision making and network investment planning.",
-            "TARGET AUDIENCE":
-              "Regulatory Bodies, Flexibility Providers, Distributed Generation Customers ",
-            "DATA SET FORMAT": "PDF ",
-            "DATA COLLECTION/ CATEGORY": "DNOA ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "30/06/2024",
-            "REFRESH RATE": "Annually",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 4,
-            "DATA SET TITLE": "DSO Advisory Board Report ",
-            "DESCRIPTION OF DATA SET":
-              "A report containing insights, analysis and recommendations related to SSEN's operations as a DSO.",
-            "USE CASE FOR DATA SET":
-              "Provide stakeholder assurance through publication of an external advisory board on various aspects of decision making.",
-            "TARGET AUDIENCE":
-              "Systems and network operators, Connections customers ",
-            "DATA SET FORMAT": "PDF ",
-            "DATA COLLECTION/ CATEGORY": "DSO Performance ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "30/06/2024",
-            "REFRESH RATE": "Annually",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 5,
-            "DATA SET TITLE": "Flexibility needs forecast",
-            "DESCRIPTION OF DATA SET":
-              "A prediction of how much flexibility is needed to balance the supply and demand of electricity. ",
-            "USE CASE FOR DATA SET":
-              "Provides insights to stakeholders for efficient energy grid planning, energy trading strategies, resource allocation and strategic investment decisions. ",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "Excel ",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "30/06/2024",
-            "REFRESH RATE": "Minimum of Every 6 months",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 6,
-            "DATA SET TITLE": "Flexibility roadmap ",
-            "DESCRIPTION OF DATA SET":
-              "A strategic plan that outlines SSEN's steps and initiatives for implementing flexibility measures in the energy system.",
-            "USE CASE FOR DATA SET":
-              "Provides future flexibility market vision and product roadmap to enable flexible service providers to know what network actions SSEN will take and when.",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "Excel ",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "30/06/2024",
-            "REFRESH RATE": "One-off, refreshed annually or as required",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 7,
-            "DATA SET TITLE": "SLC31E Procurement Statement ",
-            "DESCRIPTION OF DATA SET": "Flexibility Services Procurement Plans",
-            "USE CASE FOR DATA SET":
-              "SLC31E Regulatory Requirement.\nAllows stakeholders to assess  SSEN's effectiveness in procuring flexibility services and make informed decisions about their own energy investments.",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "PDF",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "01/02/2024",
-            "REFRESH RATE": "Annually",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "Open",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK":
-              "https://data.ssen.co.uk/@ssen-distribution/slc31e-procurement-report",
-          },
-          {
-            _id: 8,
-            "DATA SET TITLE": "SLC31E Procurement Report",
-            "DESCRIPTION OF DATA SET":
-              "Annual reporting on dispatch and procurement activity for flexibility services.",
-            "USE CASE FOR DATA SET":
-              "SLC31E Regulatory Requirement.\nAllows stakeholders to assess SSEN's effectiveness in procuring flexibility services and understand the history in the market.",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "PDF",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "01/02/2024",
-            "REFRESH RATE": "Annually",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "Open",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK":
-              "https://data.ssen.co.uk/@ssen-distribution/slc31e-procurement-report",
-          },
-          {
-            _id: 9,
-            "DATA SET TITLE": "SLC31E Procurement Report - Data Set",
-            "DESCRIPTION OF DATA SET":
-              "Flexibility Services Data for the reporting year",
-            "USE CASE FOR DATA SET":
-              "SLC31E Regulatory Requirement.\nAllows stakeholders to assess SSEN's effectiveness in procuring flexibility services and understand the history in the market.",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "Excel",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "01/02/2024",
-            "REFRESH RATE": "Annually",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "Open",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK":
-              "https://data.ssen.co.uk/@ssen-distribution/slc31e-procurement-report",
-          },
-          {
-            _id: 10,
-            "DATA SET TITLE": "Flexibility Services Contract Register ",
-            "DESCRIPTION OF DATA SET":
-              "Outcomes of procurement activity and list of contracts from various parties to provide flexibility services.",
-            "USE CASE FOR DATA SET":
-              "SLC31E Regulatory Requirement. UCR Act Legal Requirement. \n\nProvides transparency to stakeholders on who is providing flexible energy services, how much it costs and what the terms are to make informed decisions on which providers to choose, plan budgets, etc.",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "Excel",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "01/02/2024",
-            "REFRESH RATE":
-              "After every contract signature (within 30 days of this) and after every bidding round.\n\nThis year we have updated this document 4 times so far.",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK":
-              "https://data.ssen.co.uk/@ssen-distribution/flexibility-services-contract-register",
-          },
-          {
-            _id: 11,
-            "DATA SET TITLE": "Flexibility Future Needs List ",
-            "DESCRIPTION OF DATA SET":
-              "A document outlining the anticipated requirements for flexibility in the future energy landscape.",
-            "USE CASE FOR DATA SET":
-              "Allows stakeholders gain insights on anticipated changes in demand, emerging technologies, etc. to inform strategic planning and infrastructure investments.",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "Excel",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "30/06/2024",
-            "REFRESH RATE": "Every 6 months",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 12,
-            "DATA SET TITLE":
-              "Flexibility Market Price Statement\nSchedule 2D -Distribution Connection\nand Use of System Agreement (DCUSA)",
-            "DESCRIPTION OF DATA SET":
-              "This statement by SSEN provides the Exceeded Import Curtailment Price and Exceeded Export Curtailment Price using flexibility market data which has been determined in accordance with this Schedule 2D of the DCUSA\n\n",
-            "USE CASE FOR DATA SET":
-              "DCUSA Code Requirement.\n\nGain clarity on costs associated with connecting to and using the distribution network in order to make informed decisions, plan budgets etc.",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "Excel and PDF ",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "01/02/2024",
-            "REFRESH RATE": "Every 6 months",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "Open",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK":
-              "https://data.ssen.co.uk/@ssen-distribution/sepd-flexibility-market-price-statement-april-2023",
-          },
-          {
-            _id: 13,
-            "DATA SET TITLE": "CAN reporting - Contract Award Notice",
-            "DESCRIPTION OF DATA SET":
-              "Contract Award Notices as found on 'Find A Tender' .",
-            "USE CASE FOR DATA SET":
-              "UCR Act Obligation, Procurement Rules Legal Obligation.",
-            "TARGET AUDIENCE":
-              "Market participants, Regulatory Bodies, Panel members ",
-            "DATA SET FORMAT": "",
-            "DATA COLLECTION/ CATEGORY": "Flexibility Services ",
-            "PORTAL STATUS": "Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "01/02/2024",
-            "REFRESH RATE": "Within 30 days of contract award",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "Open",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK":
-              "https://data.ssen.co.uk/@ssen-distribution/can-reporting-contract-award-notice",
-          },
-          {
-            _id: 14,
-            "DATA SET TITLE": "Seasonal Operability Report (SOR)",
-            "DESCRIPTION OF DATA SET":
-              "A quarterly Operational usage report containing data on:\n\nSignificant outages (planned/unplanned)?\nNumber of outages (planned/unplanned)?\nNumber of outage constraint issues (planned/unplanned)?\nMWh curtailed due to outages?\nMWh curtailed due to Transmission outages?\nFlex services dispatched",
-            "USE CASE FOR DATA SET":
-              "This will enable current and future providers of both flexibility services and distributed energy resources to understand how the SSEN Control Room has used various services in the past three months and highlight areas of potential curtailment in the future.",
-            "TARGET AUDIENCE":
-              "Commercial Aggregator\nCommunity Aggregator\nConsultancies\nDistributed Generators\nDistribution Network Operators\nDomestic Aggregator\nElectricity Storage Providers\nElectrical Systm Operator \nIndustrial & Commercial Customers\nInternal Stakeholders\nSupplier Aggregator\nTransmission Operators \nTrade Associations\nFlexibility Service Providers ",
-            "DATA SET FORMAT": "PDF",
-            "DATA COLLECTION/ CATEGORY":
-              "Real time operational system, energy forecasting systems",
-            "PORTAL STATUS": "Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "29/03/2024",
-            "REFRESH RATE": "Quarterly \n",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "Open",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK":
-              "Seasonal Operability Report - Data Asset - SSEN Distribution Data Portal",
-          },
-          {
-            _id: 15,
-            "DATA SET TITLE": "Seasonal Operability Report (SOR) - Updated",
-            "DESCRIPTION OF DATA SET":
-              "A quarterly Operational usage report containing data on:\n\nSignificant outages (planned/unplanned)?\nNumber of outages (planned/unplanned)?\nNumber of outage constraint issues (planned/unplanned)?\nMWh curtailed due to outages?\nMWh curtailed due to Transmission outages?\nFlex services dispatched\n\nWith the addition of:\nNumber of supply interruptions",
-            "USE CASE FOR DATA SET":
-              "This will enable current and future providers of both flexibility services and distributed energy resources to understand how the SSEN Control Room has used various services in the past three months and highlight areas of potential curtailment in the future.",
-            "TARGET AUDIENCE":
-              "Commercial Aggregator\nCommunity Aggregator\nConsultancies\nDistributed Generators\nDistribution Network Operators\nDomestic Aggregator\nElectricity Storage Providers\nElectrical Systm Operator \nIndustrial & Commercial Customers\nInternal Stakeholders\nSupplier Aggregator\nTransmission Operators \nTrade Associations\nFlexibility Service Providers ",
-            "DATA SET FORMAT": "PDF ",
-            "DATA COLLECTION/ CATEGORY":
-              "Real time operational system, energy forecasting systems",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "TBC",
-            "REFRESH RATE":
-              "Quarterly \n1st March\n1st June\n1st Sept\n1st Dec",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 16,
-            "DATA SET TITLE": "DSO Performance Dashboard",
-            "DESCRIPTION OF DATA SET":
-              "Provides comprehensive overview of key performance indicators (KPIs) and metrics related to the operation and management of the DSO in the energy sector and how well the DSO is delivering on its strategy.",
-            "USE CASE FOR DATA SET":
-              "To gain insight into the operation and health of the distribution network.",
-            "TARGET AUDIENCE": "All stakeholders",
-            "DATA SET FORMAT": "Excel",
-            "DATA COLLECTION/ CATEGORY": "DSO Performance ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "30/06/2024",
-            "REFRESH RATE": "Quarterly ",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 17,
-            "DATA SET TITLE":
-              "Grid Supply Points with Technical limits on Transmission-Distribution interface",
-            "DESCRIPTION OF DATA SET":
-              "Grid Supply Points (GSPs) with Technical limits agreed and enforceable by ANM, as means to alleviate thermal constraints in National Grid assets",
-            "USE CASE FOR DATA SET":
-              "Allows individuals to complete analysis of available capacity.",
-            "TARGET AUDIENCE":
-              "Aggregators, Large Energy Users, Consultancies, Distributed Generators, Electrical System Operator, Industrial and Commercial Customers, Local Government/Authorities ",
-            "DATA SET FORMAT": "Excel",
-            "DATA COLLECTION/ CATEGORY": "Investment Plans ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "TBC",
-            "REFRESH RATE": "Ad  Hoc",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-          {
-            _id: 18,
-            "DATA SET TITLE":
-              "Earliest connection date (for non-curtailed access) per Grid Supply Point ",
-            "DESCRIPTION OF DATA SET":
-              "Shows earliest connection date to the Electrical Grid Supply Point considering known Distribution and Transmission constraints",
-            "USE CASE FOR DATA SET":
-              "Allows individuals to complete analysis of available capacity to establish earliest point of connection.",
-            "TARGET AUDIENCE":
-              "Aggregators, Large Energy Users, Consultancies, Distributed Generators, Electrical System Operator, Industrial and Commercial Customers, Local Government/Authorities ",
-            "DATA SET FORMAT": "Excel",
-            "DATA COLLECTION/ CATEGORY": "Investment Plans ",
-            "PORTAL STATUS": "Not Published",
-            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION": "TBC",
-            "REFRESH RATE": "Ad  Hoc",
-            "DATA QUALITY CATEGORY": "N/A",
-            "DATA ACCESSIBILITY CATEGORY": "",
-            "INTEGRATION METHODS": "Manual",
-            "DATA SET LINK": "",
-          },
-        ].filter((x) => x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"] !== "TBC")
-      ).map((x) => {
-        const [day, month, year] = x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"]
-          .split("/")
-          .map(Number);
-        return {
-          ...x,
-          domain: getDayOfYear(x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"]),
-          label: formatTimestamp(new Date(year, month, day)),
-          date: x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"],
-        };
-      });
-      const configuration = {
-        $schema: "https://vega.github.io/schema/vega/v5.json",
-        description:
-          "a serpentine timeline. The serpentine shape can be an option for instances where an oblong canvas is not ideal. The shape can be customized using many of the signals below. Input bindings have been included for demonstration purposes",
-        padding: 15,
-        width: 535,
-        signals: [
-          {
-            name: "width",
-            init: "width",
-            bind: {
-              name: "straight width",
-              input: "range",
-              min: 0,
-              max: 2000,
-              step: 1,
-            },
-            on: [
-              { events: [{ signal: "annotations" }], update: "width+1" },
-              { events: [{ signal: "annotations" }], update: "width-1" },
-              { events: [{ signal: "mO" }], update: "width+1" },
-              { events: [{ signal: "mO" }], update: "width-1" },
-              { events: [{ signal: "tLO" }], update: "width+1" },
-              { events: [{ signal: "tLO" }], update: "width-1" },
-              { events: [{ signal: "sN" }], update: "width+1" },
-              { events: [{ signal: "sN" }], update: "width-1" },
-              { events: [{ signal: "mO" }], update: "height+1" },
-              { events: [{ signal: "mO" }], update: "height-1" },
-              { events: [{ signal: "tLO" }], update: "height+1" },
-              { events: [{ signal: "tLO" }], update: "height-1" },
-            ],
-          },
-          {
-            name: "sH",
-            description: "serpentine: diameter of arcs",
-            value: 125,
-            bind: {
-              name: "arc diameter",
-              input: "range",
-              min: 25,
-              max: 400,
-              step: 1,
-            },
-          },
-          {
-            name: "labelsOnHover",
-            description: "milestone: show labels on hover only",
-            value: false,
-            bind: { name: "hover labels", input: "checkbox" },
-          },
-          {
-            name: "sN",
-            description: "serpentine: number of arcs",
-            value: 4,
-            bind: {
-              name: "# of arcs",
-              input: "range",
-              min: 0,
-              max: 20,
-              step: 0.01,
-            },
-          },
-          {
-            name: "tC",
-            description:
-              "ticks: number of axis ticks to display on the timeline",
-            value: 16,
-            bind: {
-              name: "tick count",
-              input: "range",
-              min: 0,
-              max: 100,
-              step: 1,
-            },
-          },
-          {
-            name: "tLO",
-            description: "ticks: the offset for the tick labels",
-            value: 8,
-          },
-          {
-            name: "mO",
-            description: "milestone: the offset for the milestone markers",
-            value: 35,
-            bind: {
-              name: "milestone offset",
-              input: "range",
-              min: 0,
-              max: 50,
-              step: 0.5,
-            },
-          },
-          {
-            name: "sR0P",
-            description:
-              "serpentine: percentage of width of canvas for the start of the timeline",
-            value: 0,
-            bind: {
-              name: "timeline x0 %",
-              input: "range",
-              min: 0,
-              max: 1,
-              step: 0.01,
-            },
-          },
-          {
-            name: "mR",
-            description:
-              "milestone: the radius for the circular milestone markers",
-            update: "10",
-          },
-          {
-            name: "_height",
-            description: "calculated width after marks have been drawn",
-            init: "height",
-            on: [
-              {
-                events: { signal: "timer + 1000 > now()" },
-                update: "pluck(pluck(data('root'), 'bounds'), 'y2')[0]",
+        function distributeDatesAtTheMonth(objects) {
+          const dateMap = new Map();
+
+          objects.forEach((element) => {
+            const month =
+              element["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"]
+                .split("/")
+                .map(Number)[1] - 1;
+            const dates = dateMap.get(month);
+            if (!dates || dates.length <= 0) {
+              dateMap.set(month, [element]);
+            } else {
+              dates.push(element);
+            }
+          });
+
+          let result = [];
+          for (const month of Array.from(dateMap.keys())) {
+            const dates = dateMap.get(month);
+            if (dates.length > 1) {
+              days = generateSpacedDates(month, dates.length);
+              dates.forEach(
+                (x, i) =>
+                  (x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"] = days[i])
+              );
+            }
+            result = [...result, ...dates];
+          }
+          return result;
+        }
+
+        const TOTAL_OF_DAYS_FROM_1ST_OF_APRIL_OF_2023_TO_17TH_OF_APRIL_OF_2025 = 748;
+
+        function formatTimestamp(timestamp) {
+          const date = new Date(timestamp);
+          const day = date.getUTCDate();
+          let dayWithSuffix;
+
+          if (day === 1 || day === 21 || day === 31) {
+            dayWithSuffix = day + "st";
+          } else if (day === 2 || day === 22) {
+            dayWithSuffix = day + "nd";
+          } else if (day === 3 || day === 23) {
+            dayWithSuffix = day + "rd";
+          } else {
+            dayWithSuffix = day + "th";
+          }
+
+          const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+          ];
+          const month = monthNames[date.getUTCMonth()];
+          return `${dayWithSuffix} ${month} ${date.getUTCFullYear()}`;
+        }
+
+        const values = distributeDatesAtTheMonth(
+          (
+            await (
+              await fetch(
+                "https://data-api.ssen.co.uk/api/3/action/datastore_search?resource_id=1ab7aed6-c20d-4645-99b8-ee0119ee220a"
+              )
+            ).json()
+          ).result.records.filter(
+            (x) => x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"] !== "TBC"
+          )
+        ).map((x) => {
+          const [day, month, year] = x[
+            "ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"
+          ]
+            .split("/")
+            .map(Number);
+          return {
+            ...x,
+            domain: getDayOfYear(x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"]),
+            label: formatTimestamp(new Date(year, month, day)),
+            date: x["ESTIMATED/ ACTUAL DATE \nOF PUBLICATION"],
+          };
+        });
+
+        const configuration = {
+          $schema: "https://vega.github.io/schema/vega/v5.json",
+          description:
+            "a serpentine timeline. The serpentine shape can be an option for instances where an oblong canvas is not ideal. The shape can be customized using many of the signals below. Input bindings have been included for demonstration purposes",
+          padding: 15,
+          width: 535,
+          signals: [
+            {
+              name: "width",
+              init: "width",
+              bind: {
+                name: "straight width",
+                input: "range",
+                min: 0,
+                max: 2000,
+                step: 1,
               },
-            ],
-          },
-          {
-            name: "_width",
-            description: "calculated width after marks have been drawn",
-            init: "width",
-            on: [
-              {
-                events: { signal: "timer + 1000 > now()" },
-                update: "pluck(pluck(data('root'), 'bounds'), 'x2')[0]",
+              on: [
+                { events: [{ signal: "annotations" }], update: "width+1" },
+                { events: [{ signal: "annotations" }], update: "width-1" },
+                { events: [{ signal: "mO" }], update: "width+1" },
+                { events: [{ signal: "mO" }], update: "width-1" },
+                { events: [{ signal: "tLO" }], update: "width+1" },
+                { events: [{ signal: "tLO" }], update: "width-1" },
+                { events: [{ signal: "sN" }], update: "width+1" },
+                { events: [{ signal: "sN" }], update: "width-1" },
+                { events: [{ signal: "mO" }], update: "height+1" },
+                { events: [{ signal: "mO" }], update: "height-1" },
+                { events: [{ signal: "tLO" }], update: "height+1" },
+                { events: [{ signal: "tLO" }], update: "height-1" },
+              ],
+            },
+            {
+              name: "sH",
+              description: "serpentine: diameter of arcs",
+              value: 125,
+              bind: {
+                name: "arc diameter",
+                input: "range",
+                min: 25,
+                max: 400,
+                step: 1,
               },
-            ],
-          },
-          {
-            name: "k",
-            value: 1,
-            description: "The scale used for zooming based on the focused node",
-            on: [
-              {
-                events: [{ type: "click" }],
-                update:
-                  "t!== 1 ? k : isValid(datum) ? !isValid(datum['domain']) ? k : k > 1 ? 1 : (_width < _height ? _width : _height)/(2*(mR)) : 1",
+            },
+            {
+              name: "labelsOnHover",
+              description: "milestone: show labels on hover only",
+              value: false,
+              bind: { name: "hover labels", input: "checkbox" },
+            },
+            {
+              name: "sN",
+              description: "serpentine: number of arcs",
+              value: 4,
+              bind: {
+                name: "# of arcs",
+                input: "range",
+                min: 0,
+                max: 20,
+                step: 0.01,
               },
-            ],
-          },
-          {
-            name: "root",
-            description:
-              "The initial node (in this case, background rect) which all zoom calculations are based off",
-            update:
-              "{timestamp: now(), id: 0, x: width/2-(sPct===1 ? -15 : 40), 'y': height/2, k: 1}",
-          },
-          {
-            name: "focus",
-            description: "The user-selected node",
-            init: "root",
-            on: [
-              {
-                events: { type: "click" },
-                update:
-                  "t!== 1 || (isValid(datum) && !isValid(datum['domain'])) ? focus : !isValid(datum) || focus['id'] === datum['id'] ? {timestamp: now(), id: root['id'], x: root['x'], 'y': root['y'], k: root['k']} : {timestamp: now(), id: datum['id'], x: datum['x'], y: datum['y'], k: k>1? k : k}",
+            },
+            {
+              name: "tC",
+              description:
+                "ticks: number of axis ticks to display on the timeline",
+              value: 16,
+              bind: {
+                name: "tick count",
+                input: "range",
+                min: 0,
+                max: 100,
+                step: 1,
               },
-            ],
-          },
-          {
-            name: "duration",
-            init: "750",
-            description:
-              "The duration for the zoom transitions. Fade-in transitions will be the same duration, but will be delayed per the amount set here.",
-            on: [
-              {
-                events: { type: "click" },
-                update:
-                  "(event.shiftKey || event.metaKey || event.ctrlKey ? 4 : 1) *750",
+            },
+            {
+              name: "tLO",
+              description: "ticks: the offset for the tick labels",
+              value: 8,
+            },
+            {
+              name: "mO",
+              description: "milestone: the offset for the milestone markers",
+              value: 35,
+              bind: {
+                name: "milestone offset",
+                input: "range",
+                min: 0,
+                max: 50,
+                step: 0.5,
               },
-            ],
-          },
-          {
-            name: "timer",
-            description:
-              "The timer to be used for transitions such as zoom, fade, etc.",
-            on: [{ events: "timer", update: "now()" }],
-          },
-          {
-            name: "interpolateTime",
-            description:
-              "the start and end times in miliseconds for animation interpolations",
-            on: [
-              {
-                events: { type: "click" },
-                update:
-                  "t!==1 || (isValid(datum) && !isValid(datum['domain'])) ?interpolateTime : {'start': timer, 'end': timer+duration}",
+            },
+            {
+              name: "sR0P",
+              description:
+                "serpentine: percentage of width of canvas for the start of the timeline",
+              value: 0,
+              bind: {
+                name: "timeline x0 %",
+                input: "range",
+                min: 0,
+                max: 1,
+                step: 0.01,
               },
-            ],
-          },
-          {
-            name: "t",
-            description: "The normalized time for easing",
-            update:
-              "interpolateTime ? clamp((timer-interpolateTime.start)/(interpolateTime.end-interpolateTime.start), 0, 1): 1",
-          },
-          {
-            name: "showDetails",
-            description:
-              "A boolean to indicate whether to show a node's details",
-            value: false,
-            on: [
-              {
-                events: {
-                  type: "click",
-                  marknames: [
-                    "milestone_arc_marks",
-                    "milestone_background_marks",
+            },
+            {
+              name: "mR",
+              description:
+                "milestone: the radius for the circular milestone markers",
+              update: "10",
+            },
+            {
+              name: "_height",
+              description: "calculated width after marks have been drawn",
+              init: "height",
+              on: [
+                {
+                  events: { signal: "timer + 1000 > now()" },
+                  update: "pluck(pluck(data('root'), 'bounds'), 'y2')[0]",
+                },
+              ],
+            },
+            {
+              name: "_width",
+              description: "calculated width after marks have been drawn",
+              init: "width",
+              on: [
+                {
+                  events: { signal: "timer + 1000 > now()" },
+                  update: "pluck(pluck(data('root'), 'bounds'), 'x2')[0]",
+                },
+              ],
+            },
+            {
+              name: "k",
+              value: 1,
+              description:
+                "The scale used for zooming based on the focused node",
+              on: [
+                {
+                  events: [{ type: "click" }],
+                  update:
+                    "t!== 1 ? k : isValid(datum) ? !isValid(datum['domain']) ? k : k > 1 ? 1 : (_width < _height ? _width : _height)/(2*(mR)) : 1",
+                },
+              ],
+            },
+            {
+              name: "root",
+              description:
+                "The initial node (in this case, background rect) which all zoom calculations are based off",
+              update:
+                "{timestamp: now(), id: 0, x: width/2-(sPct===1 ? -15 : 40), 'y': height/2, k: 1}",
+            },
+            {
+              name: "focus",
+              description: "The user-selected node",
+              init: "root",
+              on: [
+                {
+                  events: { type: "click" },
+                  update:
+                    "t!== 1 || (isValid(datum) && !isValid(datum['domain'])) ? focus : !isValid(datum) || focus['id'] === datum['id'] ? {timestamp: now(), id: root['id'], x: root['x'], 'y': root['y'], k: root['k']} : {timestamp: now(), id: datum['id'], x: datum['x'], y: datum['y'], k: k>1? k : k}",
+                },
+              ],
+            },
+            {
+              name: "duration",
+              init: "750",
+              description:
+                "The duration for the zoom transitions. Fade-in transitions will be the same duration, but will be delayed per the amount set here.",
+              on: [
+                {
+                  events: { type: "click" },
+                  update:
+                    "(event.shiftKey || event.metaKey || event.ctrlKey ? 4 : 1) *750",
+                },
+              ],
+            },
+            {
+              name: "timer",
+              description:
+                "The timer to be used for transitions such as zoom, fade, etc.",
+              on: [{ events: "timer", update: "now()" }],
+            },
+            {
+              name: "interpolateTime",
+              description:
+                "the start and end times in miliseconds for animation interpolations",
+              on: [
+                {
+                  events: { type: "click" },
+                  update:
+                    "t!==1 || (isValid(datum) && !isValid(datum['domain'])) ?interpolateTime : {'start': timer, 'end': timer+duration}",
+                },
+              ],
+            },
+            {
+              name: "t",
+              description: "The normalized time for easing",
+              update:
+                "interpolateTime ? clamp((timer-interpolateTime.start)/(interpolateTime.end-interpolateTime.start), 0, 1): 1",
+            },
+            {
+              name: "showDetails",
+              description:
+                "A boolean to indicate whether to show a node's details",
+              value: false,
+              on: [
+                {
+                  events: {
+                    type: "click",
+                    marknames: [
+                      "milestone_arc_marks",
+                      "milestone_background_marks",
+                    ],
+                  },
+                  update:
+                    "t!== 1 || (isValid(datum) && !isValid(datum['domain'])) ? showDetails : focus['id']===root['id'] ? false : true",
+                },
+              ],
+            },
+            {
+              name: "milestoneTooltip",
+              value: "''",
+              on: [
+                {
+                  events: { type: "mouseover" },
+                  update:
+                    "!isValid(hoverFocus) || showDetails ? '' : {title: hoverFocus['domain'] + 'M years ago', 'Event:': hoverFocus['name'], 'Lost:': format(12, '.0%') + ' species lost'}",
+                },
+                { events: { type: "mouseout" }, update: "''" },
+              ],
+            },
+            {
+              name: "sLP",
+              description:
+                "serpentine: percentage of total length of canvas for the end of the timeline",
+              value: 1,
+              bind: {
+                name: "timeline len %",
+                input: "range",
+                min: 0,
+                max: 1,
+                step: 0.01,
+              },
+            },
+            {
+              name: "annotationStart",
+              value: "1st April 2023",
+            },
+            {
+              name: "annotationEnd",
+              value: "17th April 2025",
+            },
+            {
+              name: "domain",
+              init: [
+                1,
+                TOTAL_OF_DAYS_FROM_1ST_OF_APRIL_OF_2023_TO_17TH_OF_APRIL_OF_2025,
+              ],
+              description:
+                "serpentine: manually set the domain extent for the timeline, otherwise set to null to have the domain calculated for you",
+            },
+            {
+              name: "sRange",
+              description: "serpentine: range for the serpentine scale",
+              update: "[sR0P*width,sL*sLP]",
+            },
+            {
+              name: "annotations",
+              description:
+                "serpentine: annotations that appear at the start and end of the timeline",
+              update:
+                "{start: (isValid(annotationStart) ? annotationStart : ''), end: (isValid(annotationEnd) ? annotationEnd : '')}",
+            },
+            {
+              name: "sD",
+              update: "[2, 2]",
+              description: "serpentine: dash array for the serpentine line",
+            },
+            {
+              name: "reverse",
+              description:
+                "serpentine: boolean to indicate whether the scale for the timeline should be reversed",
+              value: false,
+            },
+            {
+              name: "sPct",
+              description:
+                "serpentine: percentage of width for the straight portions of the timeline",
+              value: 1,
+              update: "sPct < 0.25 ? 0 : sPct < 0.75 ? 0.5 : 1",
+            },
+            {
+              name: "sW",
+              description: "serpentine: horizontal length of straight segments",
+              update: "sPct*width",
+            },
+            {
+              name: "sL",
+              description: "serpentine: total length of line",
+              update: "(sN+1)*sW+(sN)*sH*PI/2",
+            },
+            {
+              name: "sA",
+              description: "serpentine: length of an arc segment",
+              update: "(sH*PI/2)",
+            },
+            {
+              name: "sWsA",
+              description: "serpentine: length of a line + arc segment",
+              update: "(sW + sH*PI/2)",
+            },
+            {
+              name: "sDomain",
+              description: "serpentine: domain for the serpentine scale",
+              init: "domain ? domain : [+extent(pluck(data('dataset'), 'domain'))[0], +extent(pluck(data('dataset'), 'domain'))[1]]",
+            },
+            {
+              name: "hoverFocus",
+              value: 0,
+              on: [
+                {
+                  events: { type: "mouseover" },
+                  // update:
+                  //   "isValid(datum) && isValid(isValid(datum['domain'])) ? datum : null",
+                  update: "datum",
+                },
+                { events: { type: "mouseout" }, update: "null" },
+              ],
+            },
+            {
+              name: "height",
+              description: "calculated height",
+              update: "extent(pluck(data('serpentine'), 'y'))[1]",
+            },
+          ],
+          scales: [
+            {
+              name: "sS1",
+              type: "linear",
+              zero: false,
+              reverse: { signal: "reverse" },
+              domain: { signal: "sDomain" },
+              range: { signal: "sRange" },
+            },
+            {
+              name: "footerY",
+              type: "band",
+              domain: { data: "footer", field: "id" },
+              range: [
+                { signal: "height+60" },
+                { signal: "height+60+length(data('footer'))*11" },
+              ],
+            },
+          ],
+          marks: [
+            {
+              name: "axis_group",
+              description:
+                "group containing all the axis marks - annotations, domain, arrow indicators, tick lines, tick labels on straightaways, tick labels on arcs",
+              type: "group",
+              marks: [
+                {
+                  name: "annotations",
+                  description:
+                    "Text marks that appear at the start and end of the timeline. Configured using the 'annotations' signal",
+                  from: { data: "domain_extent" },
+                  on: [{ trigger: "annotations", modify: "annotations" }],
+                  type: "text",
+                  interactive: false,
+                  encode: {
+                    update: {
+                      x: { field: "x" },
+                      y: { field: "y" },
+                      text: {
+                        signal:
+                          "datum['category'] === 'start' ? annotations['start'] : annotations['end']",
+                      },
+                      fontSize: { value: 10 },
+                      baseline: { value: "middle" },
+                      align: { field: "align" },
+                      angle: { field: "angle" },
+                      dx: { field: "dx" },
+                      dy: { signal: "1" },
+                      fill: { value: "gray" },
+                    },
+                  },
+                },
+                {
+                  name: "serpentine_line",
+                  description:
+                    "The serpentine-shaped line that acts as the axis domain line",
+                  type: "line",
+                  from: { data: "serpentine" },
+                  interactive: false,
+                  encode: {
+                    update: {
+                      x: { field: "x" },
+                      y: { field: "y" },
+                      stroke: { value: "#888" },
+                      strokeWidth: 1,
+                    },
+                  },
+                },
+                // CANDIDATE
+                {
+                  name: "tick_marks",
+                  description: "The line (text mark) designated to each tick",
+                  from: { data: "ticks" },
+                  type: "text",
+                  interactive: false,
+                  encode: {
+                    update: {
+                      x: { field: "x" },
+                      y: { field: "y" },
+                      dy: {
+                        signal:
+                          "2.5*( datum['type'] === 'straight' ? 1 : datum['side'] === 'right' ? (round(datum['alpha']*(180/PI)) >= 90 ? -1 : 4) : (round(datum['alpha']*(180/PI)) > 89 ? -1 : 4))",
+                      },
+                      text: { signal: "'|'" },
+                      fontSize: { signal: "7" },
+                      fill: { value: "#000" },
+                      angle: { field: "labelAngle" },
+                      align: { value: "center" },
+                      baseline: {
+                        signal:
+                          "datum['type'] === 'straight' ? 'top' : 'bottom'",
+                      },
+                    },
+                  },
+                },
+                {
+                  name: "tick_labels_straight",
+                  description: "The straightaway tick labels",
+                  from: { data: "ticks" },
+                  type: "text",
+                  interactive: false,
+                  encode: {
+                    update: {
+                      fillOpacity: {
+                        signal: "datum['type'] === 'straight' ? 1 : 0",
+                      },
+                      align: { value: "center" },
+                      baseline: { value: "top" },
+                      x: { field: "x" },
+                      y: { field: "y" },
+                      dy: { field: "dy" },
+                      text: { signal: "dayOfYearToMonth(datum)" },
+                      // text: { field: "domain" },
+                      fontSize: { signal: "10" },
+                      fill: { value: "#000" },
+                      align: { value: "center" },
+                      angle: { field: "labelAngle" },
+                      // baseline: {
+                      //   signal: "datum['type'] === 'straight' ? 'top' : 'bottom'",
+                      // },
+                    },
+                  },
+                },
+              ],
+            },
+            // {
+            //   name: "milestone_connecting_lines",
+            //   description:
+            //     "The milestone lines that connect the markers to labels",
+            //   from: { data: "milestones" },
+            //   type: "text",
+            //   interactive: false,
+            //   encode: {
+            //     update: {
+            //       text: { signal: "'|'" },
+            //       x: { field: "x" },
+            //       y: { field: "y" },
+            //       fontSize: { value: 15 },
+            //       fontWeight: { value: 100 },
+            //       dy: {
+            //         signal:
+            //           "datum['type'] === 'arc' && (round(datum['alpha']*(180/PI)) > 89) ? 0.35 * (mO+3.5) : datum['dy']/2",
+            //       },
+            //       align: { value: "center" },
+            //       baseline: { value: "middle" },
+            //       angle: { field: "labelAngle" },
+            //       fillOpacity: { value: 0.35 },
+            //       opacity: {
+            //         signal:
+            //           "isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? 1 : labelsOnHover ? 0 : 1",
+            //       },
+            //     },
+            //   },
+            // },
+            {
+              name: "milestone_markers",
+              description: "The milestone timeline markers",
+              from: { data: "milestones" },
+              type: "symbol",
+              interactive: true,
+              encode: {
+                update: {
+                  tooltip: { signal: "milestoneTooltip" },
+                  cursor: { value: "pointer" },
+                  x: { field: "x" },
+                  y: { field: "y" },
+                  size: {
+                    signal:
+                      "labelsOnHover && isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? 200 : 150",
+                  },
+                  fill: {
+                    signal:
+                      "labelsOnHover ? isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? 'firebrick' : '#e4b3b4' : 'firebrick'",
+                  },
+                  stroke: {
+                    signal:
+                      "labelsOnHover ? isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? '#fff' : 'firebrick' : '#fff'",
+                  },
+                  strokeWidth: { signal: "labelsOnHover ? 1 : 2" },
+                  cursor: { signal: "labelsOnHover ? 'pointer' : 'default'" },
+                },
+              },
+            },
+            {
+              name: "milestone_label_backgrounds",
+              description: "The white backgrounds for milestone labels",
+              from: { data: "milestones" },
+              type: "text",
+              interactive: false,
+              encode: {
+                update: {
+                  x: { field: "x" },
+                  y: { field: "y" },
+                  dy: { field: "dy" },
+                  text: { signal: "datum['domain'] + ' - ' + datum['label']" },
+                  fontSize: { signal: "10" },
+                  fill: { value: "#fff" },
+                  stroke: { value: "#fff" },
+                  strokeWidth: { value: 7 },
+                  angle: { field: "labelAngle" },
+                  align: { value: "center" },
+                  baseline: {
+                    signal: "datum['type'] === 'straight' ? 'top' : 'bottom'",
+                  },
+                  hover: { opacity: { value: 1 } },
+                },
+              },
+            },
+            // {
+            //   name: "milestone_labels",
+            //   description: "The milestone labels",
+            //   from: { data: "milestones" },
+            //   type: "text",
+            //   interactive: false,
+            //   encode: {
+            //     update: {
+            //       x: { field: "x" },
+            //       y: { field: "y" },
+            //       dy: { field: "dy" },
+            //       // text: { signal: "datum['label']" },
+            //       text: {
+            //         signal: "datum.label",
+            //       },
+            //       fontSize: { signal: "10" },
+            //       fill: { value: "firebrick" },
+            //       angle: { field: "labelAngle" },
+            //       align: { value: "center" },
+            //       baseline: {
+            //         signal: "datum['type'] === 'straight' ? 'top' : 'bottom'",
+            //       },
+            //       opacity: {
+            //         signal:
+            //           "isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? 1 : labelsOnHover ? 0 : 1",
+            //       },
+            //     },
+            //   },
+            // },
+          ],
+          data: [
+            {
+              name: "dataset",
+              values,
+            },
+            {
+              name: "serpentineDomain",
+              values: [{}],
+              transform: [
+                {
+                  type: "formula",
+                  expr: "sequence(sDomain[0],sDomain[1], 0.1 )",
+                  as: "domain",
+                },
+                { type: "flatten", fields: ["domain"] },
+              ],
+            },
+            {
+              name: "milestoneDomain",
+              source: "dataset",
+              transform: [{ type: "project", fields: ["domain"] }],
+            },
+            {
+              name: "tickDomain",
+              values: [{}],
+              transform: [
+                { type: "formula", expr: "sequence(1,tC+1, 1)", as: "id" },
+                { type: "flatten", fields: ["id"] },
+                {
+                  type: "formula",
+                  expr: "datum['id'] === 1 ? sDomain[0] : datum['id'] === tC ? sDomain[1] : null",
+                  as: "domain",
+                },
+                {
+                  type: "formula",
+                  expr: "round(isValid(datum['domain']) ? datum['domain'] : (sDomain[0] + (sDomain[1]-sDomain[0])*((datum['id']-1)/(tC-1))))",
+                  as: "domain",
+                },
+                { type: "project", fields: ["domain"] },
+              ],
+            },
+            {
+              name: "componentEncodings",
+              values: [
+                { category: "start" },
+                { category: "serpentine" },
+                { category: "milestone" },
+                { category: "tick" },
+                { category: "end" },
+              ],
+              transform: [
+                { type: "formula", expr: "now()", as: "timestamp" },
+                {
+                  type: "formula",
+                  expr: "datum['category'] === 'start' ? [sDomain[reverse ? 1 : 0]] : datum['category'] === 'serpentine' ? pluck(data('serpentineDomain'), 'domain') : datum['category'] === 'milestone' ? pluck(data('dataset'), 'domain') : datum['category']==='tick' ? pluck(data('tickDomain'), 'domain') : datum['category'] === 'end' ? [sDomain[reverse ? 0 : 1]] : null",
+                  as: "domain",
+                },
+                {
+                  type: "lookup",
+                  from: "dataset",
+                  key: "date1",
+                  fields: ["date"],
+                  as: ["date"],
+                },
+                { type: "flatten", fields: ["domain"] },
+                { type: "formula", expr: "+datum['domain']", as: "domain" },
+                {
+                  type: "window",
+                  ops: ["row_number"],
+                  sort: { field: "domain" },
+                  groupby: ["category"],
+                  as: ["id"],
+                },
+                {
+                  type: "formula",
+                  expr: "scale('sS1', datum['domain'])",
+                  as: "sK",
+                },
+                {
+                  type: "formula",
+                  expr: "floor(datum['sK'] / (sW + sH*PI/2))",
+                  as: "i",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['sK'] % (sW + sH*PI/2)",
+                  as: "r",
+                },
+                {
+                  type: "formula",
+                  expr: "(datum['r'] - sW)/(sH/2)",
+                  as: "alpha",
+                },
+                {
+                  type: "formula",
+                  expr: "(((datum['i']+1)*sWsA)-sA) >= datum['sK'] ? 'straight' : 'arc'",
+                  as: "type",
+                },
+                {
+                  type: "formula",
+                  expr: "(datum['i']%2 == 0) ? min(datum['r'],sW) : max(sW-datum['r'], 0)",
+                  as: "xStraight",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['type'] === 'straight' ? datum['xStraight'] : datum['xStraight'] + (datum['i']%2 == 0 ? sin(datum['alpha'])*sH/2 : -sin(datum['alpha'])*sH/2)",
+                  as: "x",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['type'] === 'straight' ? datum['i']*sH : (datum['i']*sH) + (1 - cos(datum['alpha']))*sH/2",
+                  as: "y",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['type'] === 'straight' ? null : datum['i']%2===0?'right':'left'",
+                  as: "side",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['type'] === 'straight' ? null : datum['alpha']<PI/2?'top':'bottom'",
+                  as: "hemisphere",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['type'] === 'straight' ? 0 : (datum['side'] === 'left' ? -1 : 1) *datum['alpha']*(180/PI)+(datum['alpha'] < PI/2 ? 0 : 180)",
+                  as: "labelAngle",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['i']%2===0 ?'→':'←'",
+                  as: "direction",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['type'] === 'straight' ? datum['direction'] : datum['side'] === 'left' ? datum['hemisphere'] === 'top'? '←' : '→' :  datum['hemisphere'] === 'top'? '→' : '←'",
+                  as: "direction",
+                },
+              ],
+            },
+            {
+              name: "serpentine",
+              source: "componentEncodings",
+              transform: [
+                { type: "filter", expr: "datum['category'] === 'serpentine'" },
+              ],
+            },
+            {
+              name: "ticks",
+              source: "componentEncodings",
+              transform: [
+                { type: "filter", expr: "datum['category'] === 'tick'" },
+                {
+                  type: "formula",
+                  expr: "!isValid(datum['side']) ? (tLO+3.5) : datum['side'] === 'right' ? (round(datum['alpha']*(180/PI)) >= 90 ? -1 : 1.75) * (tLO+3.5) : (round(datum['alpha']*(180/PI)) > 89 ? -1 : 1.75) * (tLO+3.5)",
+                  as: "dy",
+                },
+              ],
+            },
+            {
+              name: "domain_extent",
+              source: "componentEncodings",
+              transform: [
+                {
+                  type: "filter",
+                  expr: "datum['category'] === 'start' || datum['category'] === 'end'",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['category'] === 'start' ? 'right' : datum['direction'] === '←' && datum['type'] === 'straight' ? 'right' : datum['side'] === 'left' ? 'right' : 'left'",
+                  as: "align",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['category'] === 'start' ? -tLO-5 :  datum['direction'] === '←'  && datum['type'] === 'straight' ? -tLO-5 : datum['side'] === 'left' ? -tLO-5 : tLO+5",
+                  as: "dx",
+                },
+              ],
+            },
+            {
+              name: "segment_ends",
+              source: "componentEncodings",
+              transform: [
+                {
+                  type: "joinaggregate",
+                  fields: ["id", "id"],
+                  ops: ["min", "max"],
+                  groupby: ["i"],
+                  as: ["minId", "maxId"],
+                },
+                {
+                  type: "filter",
+                  expr: "datum['id'] === (reverse ? datum['maxId'] : datum['minId'])",
+                },
+              ],
+            },
+            {
+              name: "footer",
+              values: [
+                {
+                  id: 1,
+                  text: [
+                    "Data Source:",
+                    "https://ourworldindata.org/mass-extinctions",
                   ],
+                  href: "https://ourworldindata.org/mass-extinctions",
                 },
-                update:
-                  "t!== 1 || (isValid(datum) && !isValid(datum['domain'])) ? showDetails : focus['id']===root['id'] ? false : true",
-              },
-            ],
-          },
-          {
-            name: "milestoneTooltip",
-            value: "''",
-            on: [
-              {
-                events: { type: "mouseover" },
-                update:
-                  "!isValid(hoverFocus) || showDetails ? '' : {title: hoverFocus['domain'] + 'M years ago', 'Event:': hoverFocus['name'], 'Lost:': format(12, '.0%') + ' species lost'}",
-              },
-              { events: { type: "mouseout" }, update: "''" },
-            ],
-          },
-          {
-            name: "sLP",
-            description:
-              "serpentine: percentage of total length of canvas for the end of the timeline",
-            value: 1,
-            bind: {
-              name: "timeline len %",
-              input: "range",
-              min: 0,
-              max: 1,
-              step: 0.01,
+                {
+                  id: 2,
+                  text: ["Icons:", "https://fontawesome.com/"],
+                  href: "https://fontawesome.com/",
+                },
+                {
+                  id: 3,
+                  text: ["Data Viz By:", "Madison Giammaria"],
+                  href: "https://www.linkedin.com/in/madison-giammaria-58463b33",
+                },
+              ],
             },
-          },
-          {
-            name: "annotationStart",
-            value: "1st April 2023",
-          },
-          {
-            name: "annotationEnd",
-            value: "17th April 2025",
-          },
-          {
-            name: "domain",
-            init: [
-              1,
-              TOTAL_OF_DAYS_FROM_1ST_OF_APRIL_OF_2023_TO_17TH_OF_APRIL_OF_2025,
-            ],
-            description:
-              "serpentine: manually set the domain extent for the timeline, otherwise set to null to have the domain calculated for you",
-          },
-          {
-            name: "sRange",
-            description: "serpentine: range for the serpentine scale",
-            update: "[sR0P*width,sL*sLP]",
-          },
-          {
-            name: "annotations",
-            description:
-              "serpentine: annotations that appear at the start and end of the timeline",
-            update:
-              "{start: (isValid(annotationStart) ? annotationStart : ''), end: (isValid(annotationEnd) ? annotationEnd : '')}",
-          },
-          {
-            name: "sD",
-            update: "[2, 2]",
-            description: "serpentine: dash array for the serpentine line",
-          },
-          {
-            name: "reverse",
-            description:
-              "serpentine: boolean to indicate whether the scale for the timeline should be reversed",
-            value: false,
-          },
-          {
-            name: "sPct",
-            description:
-              "serpentine: percentage of width for the straight portions of the timeline",
-            value: 1,
-            update: "sPct < 0.25 ? 0 : sPct < 0.75 ? 0.5 : 1",
-          },
-          {
-            name: "sW",
-            description: "serpentine: horizontal length of straight segments",
-            update: "sPct*width",
-          },
-          {
-            name: "sL",
-            description: "serpentine: total length of line",
-            update: "(sN+1)*sW+(sN)*sH*PI/2",
-          },
-          {
-            name: "sA",
-            description: "serpentine: length of an arc segment",
-            update: "(sH*PI/2)",
-          },
-          {
-            name: "sWsA",
-            description: "serpentine: length of a line + arc segment",
-            update: "(sW + sH*PI/2)",
-          },
-          {
-            name: "sDomain",
-            description: "serpentine: domain for the serpentine scale",
-            init: "domain ? domain : [+extent(pluck(data('dataset'), 'domain'))[0], +extent(pluck(data('dataset'), 'domain'))[1]]",
-          },
-          {
-            name: "hoverFocus",
-            value: 0,
-            on: [
-              {
-                events: { type: "mouseover" },
-                // update:
-                //   "isValid(datum) && isValid(isValid(datum['domain'])) ? datum : null",
-                update: "datum",
-              },
-              { events: { type: "mouseout" }, update: "null" },
-            ],
-          },
-          {
-            name: "height",
-            description: "calculated height",
-            update: "extent(pluck(data('serpentine'), 'y'))[1]",
-          },
-        ],
-        scales: [
-          {
-            name: "sS1",
-            type: "linear",
-            zero: false,
-            reverse: { signal: "reverse" },
-            domain: { signal: "sDomain" },
-            range: { signal: "sRange" },
-          },
-          {
-            name: "footerY",
-            type: "band",
-            domain: { data: "footer", field: "id" },
-            range: [
-              { signal: "height+60" },
-              { signal: "height+60+length(data('footer'))*11" },
-            ],
-          },
-        ],
-        marks: [
-          {
-            name: "axis_group",
-            description:
-              "group containing all the axis marks - annotations, domain, arrow indicators, tick lines, tick labels on straightaways, tick labels on arcs",
-            type: "group",
-            marks: [
-              {
-                name: "annotations",
-                description:
-                  "Text marks that appear at the start and end of the timeline. Configured using the 'annotations' signal",
-                from: { data: "domain_extent" },
-                on: [{ trigger: "annotations", modify: "annotations" }],
-                type: "text",
-                interactive: false,
-                encode: {
-                  update: {
-                    x: { field: "x" },
-                    y: { field: "y" },
-                    text: {
-                      signal:
-                        "datum['category'] === 'start' ? annotations['start'] : annotations['end']",
-                    },
-                    fontSize: { value: 10 },
-                    baseline: { value: "middle" },
-                    align: { field: "align" },
-                    angle: { field: "angle" },
-                    dx: { field: "dx" },
-                    dy: { signal: "1" },
-                    fill: { value: "gray" },
-                  },
+            {
+              name: "milestones",
+              source: "componentEncodings",
+              transform: [
+                { type: "filter", expr: "datum['category'] === 'milestone'" },
+                {
+                  type: "lookup",
+                  key: "domain",
+                  from: "dataset",
+                  fields: ["domain"],
+                  values: ["label", "color"],
                 },
-              },
-              {
-                name: "serpentine_line",
-                description:
-                  "The serpentine-shaped line that acts as the axis domain line",
-                type: "line",
-                from: { data: "serpentine" },
-                interactive: false,
-                encode: {
-                  update: {
-                    x: { field: "x" },
-                    y: { field: "y" },
-                    stroke: { value: "#888" },
-                    strokeWidth: 1,
-                  },
+                {
+                  type: "formula",
+                  expr: "!isValid(datum['side']) ? -(mO) : datum['side'] === 'right' ? (round(datum['alpha']*(180/PI)) >= 90 ? 1 : -0.5) * (mO+3.5) : (round(datum['alpha']*(180/PI)) > 89 ? 1 : -0.5) * (mO+3.5)",
+                  as: "dy",
                 },
-              },
-              // CANDIDATE
-              {
-                name: "tick_marks",
-                description: "The line (text mark) designated to each tick",
-                from: { data: "ticks" },
-                type: "text",
-                interactive: false,
-                encode: {
-                  update: {
-                    x: { field: "x" },
-                    y: { field: "y" },
-                    dy: {
-                      signal:
-                        "2.5*( datum['type'] === 'straight' ? 1 : datum['side'] === 'right' ? (round(datum['alpha']*(180/PI)) >= 90 ? -1 : 4) : (round(datum['alpha']*(180/PI)) > 89 ? -1 : 4))",
-                    },
-                    text: { signal: "'|'" },
-                    fontSize: { signal: "7" },
-                    fill: { value: "#000" },
-                    angle: { field: "labelAngle" },
-                    align: { value: "center" },
-                    baseline: {
-                      signal: "datum['type'] === 'straight' ? 'top' : 'bottom'",
-                    },
-                  },
+                {
+                  type: "formula",
+                  expr: "(isValid(hoverFocus) && hoverFocus['domain']===datum['domain']) ? 1 : 0.4",
+                  as: "fillOpacity",
                 },
-              },
-              {
-                name: "tick_labels_straight",
-                description: "The straightaway tick labels",
-                from: { data: "ticks" },
-                type: "text",
-                interactive: false,
-                encode: {
-                  update: {
-                    fillOpacity: {
-                      signal: "datum['type'] === 'straight' ? 1 : 0",
-                    },
-                    align: { value: "center" },
-                    baseline: { value: "top" },
-                    x: { field: "x" },
-                    y: { field: "y" },
-                    dy: { field: "dy" },
-                    text: { signal: "dayOfYearToMonth(datum)" },
-                    // text: { field: "domain" },
-                    fontSize: { signal: "10" },
-                    fill: { value: "#000" },
-                    align: { value: "center" },
-                    angle: { field: "labelAngle" },
-                    // baseline: {
-                    //   signal: "datum['type'] === 'straight' ? 'top' : 'bottom'",
-                    // },
-                  },
-                },
-              },
-            ],
-          },
-          // {
-          //   name: "milestone_connecting_lines",
-          //   description:
-          //     "The milestone lines that connect the markers to labels",
-          //   from: { data: "milestones" },
-          //   type: "text",
-          //   interactive: false,
-          //   encode: {
-          //     update: {
-          //       text: { signal: "'|'" },
-          //       x: { field: "x" },
-          //       y: { field: "y" },
-          //       fontSize: { value: 15 },
-          //       fontWeight: { value: 100 },
-          //       dy: {
-          //         signal:
-          //           "datum['type'] === 'arc' && (round(datum['alpha']*(180/PI)) > 89) ? 0.35 * (mO+3.5) : datum['dy']/2",
-          //       },
-          //       align: { value: "center" },
-          //       baseline: { value: "middle" },
-          //       angle: { field: "labelAngle" },
-          //       fillOpacity: { value: 0.35 },
-          //       opacity: {
-          //         signal:
-          //           "isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? 1 : labelsOnHover ? 0 : 1",
-          //       },
-          //     },
-          //   },
-          // },
-          {
-            name: "milestone_markers",
-            description: "The milestone timeline markers",
-            from: { data: "milestones" },
-            type: "symbol",
-            interactive: true,
-            encode: {
-              update: {
-                tooltip: { signal: "milestoneTooltip" },
-                cursor: { value: "pointer" },
-                x: { field: "x" },
-                y: { field: "y" },
-                size: {
-                  signal:
-                    "labelsOnHover && isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? 200 : 150",
-                },
-                fill: {
-                  signal:
-                    "labelsOnHover ? isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? 'firebrick' : '#e4b3b4' : 'firebrick'",
-                },
-                stroke: {
-                  signal:
-                    "labelsOnHover ? isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? '#fff' : 'firebrick' : '#fff'",
-                },
-                strokeWidth: { signal: "labelsOnHover ? 1 : 2" },
-                cursor: { signal: "labelsOnHover ? 'pointer' : 'default'" },
-              },
+              ],
             },
-          },
-          {
-            name: "milestone_label_backgrounds",
-            description: "The white backgrounds for milestone labels",
-            from: { data: "milestones" },
-            type: "text",
-            interactive: false,
-            encode: {
-              update: {
-                x: { field: "x" },
-                y: { field: "y" },
-                dy: { field: "dy" },
-                text: { signal: "datum['domain'] + ' - ' + datum['label']" },
-                fontSize: { signal: "10" },
-                fill: { value: "#fff" },
-                stroke: { value: "#fff" },
-                strokeWidth: { value: 7 },
-                angle: { field: "labelAngle" },
-                align: { value: "center" },
-                baseline: {
-                  signal: "datum['type'] === 'straight' ? 'top' : 'bottom'",
-                },
-                hover: { opacity: { value: 1 } },
-              },
-            },
-          },
-          // {
-          //   name: "milestone_labels",
-          //   description: "The milestone labels",
-          //   from: { data: "milestones" },
-          //   type: "text",
-          //   interactive: false,
-          //   encode: {
-          //     update: {
-          //       x: { field: "x" },
-          //       y: { field: "y" },
-          //       dy: { field: "dy" },
-          //       // text: { signal: "datum['label']" },
-          //       text: {
-          //         signal: "datum.label",
-          //       },
-          //       fontSize: { signal: "10" },
-          //       fill: { value: "firebrick" },
-          //       angle: { field: "labelAngle" },
-          //       align: { value: "center" },
-          //       baseline: {
-          //         signal: "datum['type'] === 'straight' ? 'top' : 'bottom'",
-          //       },
-          //       opacity: {
-          //         signal:
-          //           "isValid(hoverFocus) && datum['label'] === hoverFocus['label'] ? 1 : labelsOnHover ? 0 : 1",
-          //       },
-          //     },
-          //   },
-          // },
-        ],
-        data: [
-          {
-            name: "dataset",
-            values,
-          },
-          {
-            name: "serpentineDomain",
-            values: [{}],
-            transform: [
-              {
-                type: "formula",
-                expr: "sequence(sDomain[0],sDomain[1], 0.1 )",
-                as: "domain",
-              },
-              { type: "flatten", fields: ["domain"] },
-            ],
-          },
-          {
-            name: "milestoneDomain",
-            source: "dataset",
-            transform: [{ type: "project", fields: ["domain"] }],
-          },
-          {
-            name: "tickDomain",
-            values: [{}],
-            transform: [
-              { type: "formula", expr: "sequence(1,tC+1, 1)", as: "id" },
-              { type: "flatten", fields: ["id"] },
-              {
-                type: "formula",
-                expr: "datum['id'] === 1 ? sDomain[0] : datum['id'] === tC ? sDomain[1] : null",
-                as: "domain",
-              },
-              {
-                type: "formula",
-                expr: "round(isValid(datum['domain']) ? datum['domain'] : (sDomain[0] + (sDomain[1]-sDomain[0])*((datum['id']-1)/(tC-1))))",
-                as: "domain",
-              },
-              { type: "project", fields: ["domain"] },
-            ],
-          },
-          {
-            name: "componentEncodings",
-            values: [
-              { category: "start" },
-              { category: "serpentine" },
-              { category: "milestone" },
-              { category: "tick" },
-              { category: "end" },
-            ],
-            transform: [
-              { type: "formula", expr: "now()", as: "timestamp" },
-              {
-                type: "formula",
-                expr: "datum['category'] === 'start' ? [sDomain[reverse ? 1 : 0]] : datum['category'] === 'serpentine' ? pluck(data('serpentineDomain'), 'domain') : datum['category'] === 'milestone' ? pluck(data('dataset'), 'domain') : datum['category']==='tick' ? pluck(data('tickDomain'), 'domain') : datum['category'] === 'end' ? [sDomain[reverse ? 0 : 1]] : null",
-                as: "domain",
-              },
-              {
-                type: "lookup",
-                from: "dataset",
-                key: "date1",
-                fields: ["date"],
-                as: ["date"],
-              },
-              { type: "flatten", fields: ["domain"] },
-              { type: "formula", expr: "+datum['domain']", as: "domain" },
-              {
-                type: "window",
-                ops: ["row_number"],
-                sort: { field: "domain" },
-                groupby: ["category"],
-                as: ["id"],
-              },
-              {
-                type: "formula",
-                expr: "scale('sS1', datum['domain'])",
-                as: "sK",
-              },
-              {
-                type: "formula",
-                expr: "floor(datum['sK'] / (sW + sH*PI/2))",
-                as: "i",
-              },
-              {
-                type: "formula",
-                expr: "datum['sK'] % (sW + sH*PI/2)",
-                as: "r",
-              },
-              {
-                type: "formula",
-                expr: "(datum['r'] - sW)/(sH/2)",
-                as: "alpha",
-              },
-              {
-                type: "formula",
-                expr: "(((datum['i']+1)*sWsA)-sA) >= datum['sK'] ? 'straight' : 'arc'",
-                as: "type",
-              },
-              {
-                type: "formula",
-                expr: "(datum['i']%2 == 0) ? min(datum['r'],sW) : max(sW-datum['r'], 0)",
-                as: "xStraight",
-              },
-              {
-                type: "formula",
-                expr: "datum['type'] === 'straight' ? datum['xStraight'] : datum['xStraight'] + (datum['i']%2 == 0 ? sin(datum['alpha'])*sH/2 : -sin(datum['alpha'])*sH/2)",
-                as: "x",
-              },
-              {
-                type: "formula",
-                expr: "datum['type'] === 'straight' ? datum['i']*sH : (datum['i']*sH) + (1 - cos(datum['alpha']))*sH/2",
-                as: "y",
-              },
-              {
-                type: "formula",
-                expr: "datum['type'] === 'straight' ? null : datum['i']%2===0?'right':'left'",
-                as: "side",
-              },
-              {
-                type: "formula",
-                expr: "datum['type'] === 'straight' ? null : datum['alpha']<PI/2?'top':'bottom'",
-                as: "hemisphere",
-              },
-              {
-                type: "formula",
-                expr: "datum['type'] === 'straight' ? 0 : (datum['side'] === 'left' ? -1 : 1) *datum['alpha']*(180/PI)+(datum['alpha'] < PI/2 ? 0 : 180)",
-                as: "labelAngle",
-              },
-              {
-                type: "formula",
-                expr: "datum['i']%2===0 ?'→':'←'",
-                as: "direction",
-              },
-              {
-                type: "formula",
-                expr: "datum['type'] === 'straight' ? datum['direction'] : datum['side'] === 'left' ? datum['hemisphere'] === 'top'? '←' : '→' :  datum['hemisphere'] === 'top'? '→' : '←'",
-                as: "direction",
-              },
-            ],
-          },
-          {
-            name: "serpentine",
-            source: "componentEncodings",
-            transform: [
-              { type: "filter", expr: "datum['category'] === 'serpentine'" },
-            ],
-          },
-          {
-            name: "ticks",
-            source: "componentEncodings",
-            transform: [
-              { type: "filter", expr: "datum['category'] === 'tick'" },
-              {
-                type: "formula",
-                expr: "!isValid(datum['side']) ? (tLO+3.5) : datum['side'] === 'right' ? (round(datum['alpha']*(180/PI)) >= 90 ? -1 : 1.75) * (tLO+3.5) : (round(datum['alpha']*(180/PI)) > 89 ? -1 : 1.75) * (tLO+3.5)",
-                as: "dy",
-              },
-            ],
-          },
-          {
-            name: "domain_extent",
-            source: "componentEncodings",
-            transform: [
-              {
-                type: "filter",
-                expr: "datum['category'] === 'start' || datum['category'] === 'end'",
-              },
-              {
-                type: "formula",
-                expr: "datum['category'] === 'start' ? 'right' : datum['direction'] === '←' && datum['type'] === 'straight' ? 'right' : datum['side'] === 'left' ? 'right' : 'left'",
-                as: "align",
-              },
-              {
-                type: "formula",
-                expr: "datum['category'] === 'start' ? -tLO-5 :  datum['direction'] === '←'  && datum['type'] === 'straight' ? -tLO-5 : datum['side'] === 'left' ? -tLO-5 : tLO+5",
-                as: "dx",
-              },
-            ],
-          },
-          {
-            name: "segment_ends",
-            source: "componentEncodings",
-            transform: [
-              {
-                type: "joinaggregate",
-                fields: ["id", "id"],
-                ops: ["min", "max"],
-                groupby: ["i"],
-                as: ["minId", "maxId"],
-              },
-              {
-                type: "filter",
-                expr: "datum['id'] === (reverse ? datum['maxId'] : datum['minId'])",
-              },
-            ],
-          },
-          {
-            name: "footer",
-            values: [
-              {
-                id: 1,
-                text: [
-                  "Data Source:",
-                  "https://ourworldindata.org/mass-extinctions",
-                ],
-                href: "https://ourworldindata.org/mass-extinctions",
-              },
-              {
-                id: 2,
-                text: ["Icons:", "https://fontawesome.com/"],
-                href: "https://fontawesome.com/",
-              },
-              {
-                id: 3,
-                text: ["Data Viz By:", "Madison Giammaria"],
-                href: "https://www.linkedin.com/in/madison-giammaria-58463b33",
-              },
-            ],
-          },
-          {
-            name: "milestones",
-            source: "componentEncodings",
-            transform: [
-              { type: "filter", expr: "datum['category'] === 'milestone'" },
-              {
-                type: "lookup",
-                key: "domain",
-                from: "dataset",
-                fields: ["domain"],
-                values: ["label", "color"],
-              },
-              {
-                type: "formula",
-                expr: "!isValid(datum['side']) ? -(mO) : datum['side'] === 'right' ? (round(datum['alpha']*(180/PI)) >= 90 ? 1 : -0.5) * (mO+3.5) : (round(datum['alpha']*(180/PI)) > 89 ? 1 : -0.5) * (mO+3.5)",
-                as: "dy",
-              },
-              {
-                type: "formula",
-                expr: "(isValid(hoverFocus) && hoverFocus['domain']===datum['domain']) ? 1 : 0.4",
-                as: "fillOpacity",
-              },
-            ],
-          },
-        ],
+          ],
+        };
+        vegaEmbed("#vis", configuration, {
+          expressionFunctions: { dayOfYearToMonth },
+        });
       };
-      vegaEmbed("#vis", configuration, {
-        expressionFunctions: { dayOfYearToMonth },
-      });
+      a();
     </script>
   </body>
 </html>
