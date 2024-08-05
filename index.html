@@ -56,7 +56,7 @@
             datum.domain - DAYS_IN_2023_FROM_1ST_OF_APRIL;
         } else if (datum.domain > START_OF_2025) {
           dayOfTheYear =
-            datum.domain - DAYS_IN_LEAP_YEAR - DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
+            datum.domain - DAYS_IN_LEAP_YEAR - DAYS_IN_2023_FROM_1ST_OF_APRIL;
         } else {
           dayOfTheYear = datum.domain + DAYS_FROM_JAN_UNTIL_APR_IN_REGULAR_YEAR;
         }
@@ -537,7 +537,7 @@
         description:
           "a serpentine timeline. The serpentine shape can be an option for instances where an oblong canvas is not ideal. The shape can be customized using many of the signals below. Input bindings have been included for demonstration purposes",
         padding: 15,
-        width: 300,
+        width: 535,
         signals: [
           {
             name: "width",
