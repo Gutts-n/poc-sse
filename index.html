@@ -197,7 +197,7 @@
           description:
             "a serpentine timeline. The serpentine shape can be an option for instances where an oblong canvas is not ideal. The shape can be customized using many of the signals below. Input bindings have been included for demonstration purposes",
           padding: 15,
-          width: 535,
+          width: 1235,
           signals: [
             {
               name: "width",
@@ -339,6 +339,18 @@
               ],
             },
             {
+              name: "k0",
+              value: 1,
+              description:
+                "The previous scale used for zooming based on the focused node",
+              on: [
+                {
+                  events: [{ signal: "data('focus0')" }],
+                  update: "pluck(data('focus0'), 'k')[0]",
+                },
+              ],
+            },
+            {
               name: "root",
               description:
                 "The initial node (in this case, background rect) which all zoom calculations are based off",
@@ -356,6 +368,20 @@
                     "t!== 1 || (isValid(datum) && !isValid(datum['domain'])) ? focus : !isValid(datum) || focus['id'] === datum['id'] ? {timestamp: now(), id: root['id'], x: root['x'], 'y': root['y'], k: root['k']} : {timestamp: now(), id: datum['id'], x: datum['x'], y: datum['y'], k: k>1? k : k}",
                 },
               ],
+            },
+            {
+              name: "focus0",
+              description: "The previous user-selected node",
+              update:
+                "data('focus0') && length(data('focus0'))>0 ? data('focus0')[0] : focus",
+            },
+            {
+              name: "tEase",
+              value: 1,
+              description:
+                "The easing calculation. Currently set as easeInOutCubic",
+              update:
+                "t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1",
             },
             {
               name: "duration",
@@ -414,13 +440,37 @@
               ],
             },
             {
+              name: "tEaseDelayed",
+              description:
+                "The delayed easing calculation. Currently set as easeInOutCubic",
+              update:
+                "tDelayed < 0.5 ? 4 * tDelayed * tDelayed * tDelayed : (tDelayed - 1) * (2 * tDelayed - 2) * (2 * tDelayed - 2) + 1",
+            },
+            {
+              name: "interpolateTimeDelayed",
+              description: "The delayed time for easing",
+              on: [
+                {
+                  events: { signal: "interpolateTime" },
+                  update:
+                    "{'start': interpolateTime['end'], 'end': interpolateTime['end']+duration}",
+                },
+              ],
+            },
+            {
+              name: "tDelayed",
+              description: "The delayed normalized time for easing",
+              update:
+                "interpolateTimeDelayed ? clamp((timer-interpolateTimeDelayed.start)/(interpolateTimeDelayed.end-interpolateTimeDelayed.start), 0, 1): null",
+            },
+            {
               name: "milestoneTooltip",
               value: "''",
               on: [
                 {
                   events: { type: "mouseover" },
                   update:
-                    "!isValid(hoverFocus) || showDetails ? '' : {title: hoverFocus['domain'] + 'M years ago', 'Title:': hoverFocus['DATA SET TITLE']}",
+                    "!isValid(hoverFocus) || showDetails ? '' : {'Date:': hoverFocus['label'], 'Name:': hoverFocus['DATA SET TITLE'], 'Type:': hoverFocus['DATA SET TITLE']}",
                 },
                 { events: { type: "mouseout" }, update: "''" },
               ],
@@ -550,11 +600,330 @@
           ],
           marks: [
             {
+              type: "group",
+              name: "milestone_group",
+              description:
+                "group containing the milestone backgrounds and arcs",
+              marks: [
+                {
+                  name: "milestone_background_marks",
+                  description: "Arcs that serve as the milestone background",
+                  type: "arc",
+                  from: { data: "milestones" },
+                  encode: {
+                    update: {
+                      tooltip: { signal: "milestoneTooltip" },
+                      cursor: { value: "pointer" },
+                      x: {
+                        signal:
+                          "lerp([root['x'] + (datum['x'] - focus0['x']) * k0, root['x'] + (datum['x'] - focus['x']) * k], tEase)",
+                      },
+                      y: {
+                        signal:
+                          "lerp([root['y'] + (datum['y'] - focus0['y']) * k0, root['y'] + (datum['y'] - focus['y']) * k], tEase)",
+                      },
+                      startAngle: { signal: "0" },
+                      endAngle: { signal: "2*PI" },
+                      innerRadius: { signal: "0" },
+                      outerRadius: {
+                        signal: "lerp([(mR+mR/5)*k0, (mR+mR/5)*k], tEase)",
+                      },
+                      stroke: { value: "gainsboro" },
+                      strokeWidth: { value: 1 },
+                      fill: { value: "#fff" },
+                    },
+                  },
+                },
+                {
+                  name: "milestone_arc_marks",
+                  description:
+                    "Arcs that serve as an encoded percentage for a given measure",
+                  type: "arc",
+                  from: { data: "milestones" },
+                  encode: {
+                    update: {
+                      cursor: { value: "pointer" },
+                      tooltip: { signal: "milestoneTooltip" },
+                      x: {
+                        signal:
+                          "lerp([root['x'] + (datum['x'] - focus0['x']) * k0, root['x'] + (datum['x'] - focus['x']) * k], tEase)",
+                      },
+                      y: {
+                        signal:
+                          "lerp([root['y'] + (datum['y'] - focus0['y']) * k0, root['y'] + (datum['y'] - focus['y']) * k], tEase)",
+                      },
+                      startAngle: { signal: "0" },
+                      endAngle: {
+                        signal: "(2*PI)*datum['Percentage of species lost']",
+                      },
+                      innerRadius: {
+                        signal:
+                          "showDetails ? lerp([mR*k0, mR*1.1*k], tEase) : lerp([mR*1.1*k0, mR*k], tEase)",
+                      },
+                      outerRadius: {
+                        signal: "lerp([(mR+mR/5)*k0, (mR+mR/5)*k], tEase)",
+                      },
+                      fillOpacity: { field: "fillOpacity" },
+                      fill: { value: "firebrick" },
+                    },
+                  },
+                },
+              ],
+            },
+            {
               name: "axis_group",
               description:
                 "group containing all the axis marks - annotations, domain, arrow indicators, tick lines, tick labels on straightaways, tick labels on arcs",
               type: "group",
               marks: [
+                {
+                  type: "group",
+                  name: "milestone_group",
+                  description:
+                    "group containing the milestone backgrounds and arcs",
+                  marks: [
+                    {
+                      name: "milestone_background_marks",
+                      description:
+                        "Arcs that serve as the milestone background",
+                      type: "arc",
+                      from: { data: "milestones" },
+                      encode: {
+                        update: {
+                          tooltip: { signal: "milestoneTooltip" },
+                          cursor: { value: "pointer" },
+                          x: {
+                            signal:
+                              "lerp([root['x'] + (datum['x'] - focus0['x']) * k0, root['x'] + (datum['x'] - focus['x']) * k], tEase)",
+                          },
+                          y: {
+                            signal:
+                              "lerp([root['y'] + (datum['y'] - focus0['y']) * k0, root['y'] + (datum['y'] - focus['y']) * k], tEase)",
+                          },
+                          startAngle: { signal: "0" },
+                          endAngle: { signal: "2*PI" },
+                          innerRadius: { signal: "0" },
+                          outerRadius: {
+                            signal: "lerp([(mR+mR/5)*k0, (mR+mR/5)*k], tEase)",
+                          },
+                          stroke: { value: "gainsboro" },
+                          strokeWidth: { value: 1 },
+                          fill: { value: "#fff" },
+                        },
+                      },
+                    },
+                    {
+                      name: "milestone_arc_marks",
+                      description:
+                        "Arcs that serve as an encoded percentage for a given measure",
+                      type: "arc",
+                      from: { data: "milestones" },
+                      encode: {
+                        update: {
+                          cursor: { value: "pointer" },
+                          tooltip: { signal: "milestoneTooltip" },
+                          x: {
+                            signal:
+                              "lerp([root['x'] + (datum['x'] - focus0['x']) * k0, root['x'] + (datum['x'] - focus['x']) * k], tEase)",
+                          },
+                          y: {
+                            signal:
+                              "lerp([root['y'] + (datum['y'] - focus0['y']) * k0, root['y'] + (datum['y'] - focus['y']) * k], tEase)",
+                          },
+                          startAngle: { signal: "0" },
+                          endAngle: {
+                            signal:
+                              "(2*PI)*datum['Percentage of species lost']",
+                          },
+                          innerRadius: {
+                            signal:
+                              "showDetails ? lerp([mR*k0, mR*1.1*k], tEase) : lerp([mR*1.1*k0, mR*k], tEase)",
+                          },
+                          outerRadius: {
+                            signal: "lerp([(mR+mR/5)*k0, (mR+mR/5)*k], tEase)",
+                          },
+                          fillOpacity: { field: "fillOpacity" },
+                          fill: { value: "firebrick" },
+                        },
+                      },
+                    },
+                  ],
+                },
+                {
+                  name: "details_title",
+                  details: "the name of the node (appears on zoom)",
+                  type: "text",
+                  from: { data: "details_data" },
+                  interactive: false,
+                  encode: {
+                    enter: {
+                      text: { signal: "datum['name']" },
+                      fill: { value: "#000" },
+                      fontSize: {
+                        signal: "0.085*(_width < _height ? width : height)",
+                      },
+                      align: { value: "center" },
+                      x: { signal: "width/2-(sPct===1 ? -15 : 40)" },
+                      y: { signal: "height/2-(mR*k)*0.75" },
+                      fillOpacity: { value: 0.65 },
+                      baseline: { value: "bottom" },
+                      opacity: { value: 0 },
+                    },
+                    update: {
+                      opacity: { signal: "!showDetails ? 0 : tEaseDelayed" },
+                    },
+                  },
+                },
+                {
+                  name: "details_title_subtitle",
+                  details: "the subtitle of the node (appears on zoom)",
+                  type: "text",
+                  from: { data: "details_data" },
+                  interactive: false,
+                  encode: {
+                    enter: {
+                      text: {
+                        signal: "datum['domain'] + ' million years ago'",
+                      },
+                      fill: { value: "firebrick" },
+                      fontSize: {
+                        signal: "0.05*(_width < _height ? width : height)",
+                      },
+                      align: { value: "center" },
+                      fontWeight: { value: "bold" },
+                      x: { signal: "width/2-(sPct===1 ? -15 : 40)" },
+                      y: {
+                        signal:
+                          "data('details_title')[0]['bounds']['y2']+0.01*((_width < _height ? width : height))",
+                      },
+                      baseline: { value: "top" },
+                      opacity: { value: 0 },
+                    },
+                    update: {
+                      opacity: { signal: "!showDetails ? 0 : tEaseDelayed" },
+                    },
+                  },
+                },
+                {
+                  name: "details_percentage",
+                  details:
+                    "the measure as text formatted as a percentage (appears on zoom)",
+                  type: "text",
+                  from: { data: "details_data" },
+                  interactive: false,
+                  encode: {
+                    enter: {
+                      text: {
+                        signal:
+                          "format(datum['Percentage of species lost'], '.0%')",
+                      },
+                      fill: { value: "firebrick" },
+                      fontSize: {
+                        signal: "0.25*(_width < _height ? width : height)",
+                      },
+                      align: { value: "center" },
+                      fontWeight: { value: "bold" },
+                      x: { signal: "width/2-(sPct===1 ? -15 : 40)" },
+                      y: {
+                        signal:
+                          "data('details_title_subtitle')[0]['bounds']['y2']+0.01*((_width < _height ? width : height))",
+                      },
+                      baseline: { value: "top" },
+                      opacity: { value: 0 },
+                    },
+                    update: {
+                      opacity: { signal: "!showDetails ? 0 : tEaseDelayed" },
+                    },
+                  },
+                },
+                {
+                  name: "details_percentage_suffix",
+                  details:
+                    "the text that appears after the measure percentage text (appears on zoom)",
+                  type: "text",
+                  from: { data: "details_data" },
+                  interactive: false,
+                  encode: {
+                    enter: {
+                      x: { signal: "width/2-(sPct===1 ? -15 : 40)" },
+                      y: {
+                        signal:
+                          "data('details_percentage')[0]['bounds']['y2']-(0.035*mR*k)",
+                      },
+                      text: { signal: "'species lost'" },
+                      fill: { value: "firebrick" },
+                      fontWeight: { value: 100 },
+                      fontStyle: { value: "italic" },
+                      fontSize: {
+                        signal: "0.065*(_width < _height ? width : height)",
+                      },
+                      align: { value: "center" },
+                      baseline: { value: "top" },
+                      opacity: { value: 0 },
+                    },
+                    update: {
+                      opacity: { signal: "!showDetails ? 0 : tEaseDelayed" },
+                    },
+                  },
+                },
+                {
+                  name: "details_desecription",
+                  details:
+                    "Wrapped text that further describes the user-selected node (appears on zoom)",
+                  type: "text",
+                  from: { data: "details_COE" },
+                  interactive: false,
+                  encode: {
+                    enter: {
+                      text: { field: "line" },
+                      fill: { value: "#000" },
+                      font: { value: "Consolas" },
+                      fontSize: { field: "fontSize" },
+                      align: { value: "center" },
+                      x: { signal: "width/2-(sPct===1 ? -15 : 40)" },
+                      y: {
+                        signal:
+                          "data('details_percentage_suffix')[0]['bounds']['y2']+(0.09*mR*k)+datum['y']",
+                      },
+                      baseline: { value: "top" },
+                      fillOpacity: { value: 0.65 },
+                      opacity: { value: 0 },
+                    },
+                    update: {
+                      opacity: { signal: "!showDetails ? 0 : tEaseDelayed" },
+                    },
+                  },
+                },
+                {
+                  name: "details_icon_path",
+                  details:
+                    "An icon associated with the user-selected node (appears on zoom)",
+                  type: "symbol",
+                  from: { data: "details_data" },
+                  interactive: false,
+                  encode: {
+                    enter: {
+                      shape: { field: "path" },
+                      fill: { value: "firebrick" },
+                      fontSize: { field: "fontSize" },
+                      align: { value: "left" },
+                      x: {
+                        signal:
+                          "width/2-(sPct===1 ? -15 : 40)-((256*datum['pathSize'])*1.5)+datum['iconDx']",
+                      },
+                      size: { field: "pathSize" },
+                      y: {
+                        signal:
+                          "data('details_desecription')[0]['bounds']['y2'] + (data('details_COE')[0]['lines']*data('details_COE')[0]['line_height'])",
+                      },
+                      fillOpacity: { value: 0.25 },
+                      opacity: { value: 0 },
+                    },
+                    update: {
+                      opacity: { signal: "!showDetails ? 0 : tEaseDelayed" },
+                    },
+                  },
+                },
                 {
                   name: "annotations",
                   description:
@@ -983,6 +1352,191 @@
                   id: 3,
                   text: ["Data Viz By:", "Madison Giammaria"],
                   href: "https://www.linkedin.com/in/madison-giammaria-58463b33",
+                },
+              ],
+            },
+            {
+              name: "focus0",
+              on: [{ trigger: "focus", remove: false, insert: "focus" }],
+              transform: [
+                {
+                  type: "window",
+                  ops: ["row_number"],
+                  sort: { field: "timestamp", order: "descending" },
+                  as: ["index"],
+                },
+                {
+                  type: "joinaggregate",
+                  ops: ["max"],
+                  fields: ["index"],
+                  as: ["maxIndex"],
+                },
+                {
+                  type: "filter",
+                  expr: "datum['maxIndex'] === 1 ? true : datum['index'] === 2",
+                },
+              ],
+            },
+            {
+              name: "details_data",
+              source: "dataset",
+              transform: [
+                {
+                  type: "filter",
+                  expr: "datum['id'] === focus['id'] && showDetails",
+                },
+                {
+                  type: "lookup",
+                  key: "domain",
+                  from: "dataset",
+                  fields: ["domain"],
+                  values: ["path", "iconDx"],
+                },
+                {
+                  type: "formula",
+                  expr: "(1/256*(0.05*(2*(mR*k))))",
+                  as: "pathSize",
+                },
+              ],
+            },
+            {
+              name: "details_COE",
+              source: "details_data",
+              transform: [
+                {
+                  type: "filter",
+                  expr: "datum['id'] === focus['id'] && showDetails",
+                },
+                { type: "formula", expr: "(0.055*(1.5*mR*k))", as: "fontSize" },
+                {
+                  type: "formula",
+                  expr: "((7/12)*datum['fontSize'])",
+                  as: "label_character_width",
+                },
+                {
+                  type: "formula",
+                  expr: "(2*mR*k)*1",
+                  as: "line_allowable_width",
+                },
+                {
+                  type: "formula",
+                  expr: "split(datum['Cause of extinction'], ' ')",
+                  as: "word_array",
+                },
+                { type: "flatten", fields: ["word_array"], as: ["word"] },
+                { type: "window", ops: ["row_number"], as: ["word_index"] },
+                {
+                  type: "formula",
+                  expr: "datum['word_index']-1",
+                  as: "word_index",
+                },
+                {
+                  type: "formula",
+                  expr: "length(datum['word'])",
+                  as: "word_length",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['word_length']*datum['label_character_width']",
+                  as: "word_width",
+                },
+                {
+                  type: "window",
+                  ops: ["sum"],
+                  fields: ["word_width"],
+                  as: ["word_width_running_sum"],
+                },
+                {
+                  type: "formula",
+                  expr: "datum['word_width_running_sum']+(datum['word_index']*datum['label_character_width'])",
+                  as: "word_width_running_sum_with_spaces",
+                },
+                {
+                  type: "formula",
+                  expr: "ceil(datum['word_width_running_sum_with_spaces']/(datum['line_allowable_width']))",
+                  as: "line_index",
+                },
+                {
+                  type: "window",
+                  ops: ["sum"],
+                  fields: ["word_length"],
+                  groupby: ["line_index"],
+                  as: ["word_length_running_sum"],
+                },
+                {
+                  type: "joinaggregate",
+                  ops: ["count"],
+                  groupby: ["line_index"],
+                  as: ["word_count_per_line"],
+                },
+                {
+                  type: "window",
+                  ops: ["max"],
+                  fields: ["word_length_running_sum"],
+                  groupby: ["line_index"],
+                  frame: [null, null],
+                  as: ["line_character_length"],
+                },
+                {
+                  type: "formula",
+                  expr: "datum['line_character_length']+(datum['word_count_per_line']-1)",
+                  as: "line_character_length",
+                },
+                {
+                  type: "aggregate",
+                  ops: ["mean"],
+                  fields: ["line_index"],
+                  groupby: [
+                    "Cause of extinction",
+                    "fontSize",
+                    "line_allowable_width",
+                    "word_array",
+                    "line_index",
+                    "line_character_length",
+                  ],
+                },
+                {
+                  type: "window",
+                  ops: ["lag"],
+                  fields: ["line_character_length"],
+                  as: ["last_character_length"],
+                },
+                {
+                  type: "formula",
+                  expr: "datum['last_character_length'] ? datum['last_character_length']+1 : 0",
+                  as: "arr_start_index",
+                },
+                {
+                  type: "window",
+                  ops: ["sum"],
+                  fields: ["arr_start_index"],
+                  as: ["arr_start_index"],
+                },
+                {
+                  type: "formula",
+                  expr: "datum['arr_start_index']+datum['line_character_length']",
+                  as: "arr_end_index",
+                },
+                {
+                  type: "formula",
+                  expr: "slice(datum['Cause of extinction'], datum['arr_start_index'], datum['arr_end_index'])",
+                  as: "line",
+                },
+                {
+                  type: "joinaggregate",
+                  ops: ["max"],
+                  fields: ["line_index"],
+                  as: ["lines"],
+                },
+                {
+                  type: "formula",
+                  expr: "datum['fontSize']*1.075",
+                  as: "line_height",
+                },
+                {
+                  type: "formula",
+                  expr: "datum['line_height']*(datum['line_index']-1)",
+                  as: "y",
                 },
               ],
             },
